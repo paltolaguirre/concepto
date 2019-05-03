@@ -1,10 +1,10 @@
-package structLegajo
+package structConcepto
 
 import (
 	"github.com/jinzhu/gorm"
 )
 
-type Condicion struct {
+type Concepto struct {
 	gorm.Model
 	Concepto       string `json:"concepto"`
 	Codigo         string `json:"codigo"`

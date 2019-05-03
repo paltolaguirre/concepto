@@ -10,7 +10,7 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/xubiosueldos/autenticacion/publico"
- "github.com/xubiosueldos/concepto/structConcepto"
+	"github.com/xubiosueldos/concepto/structConcepto"
 	"github.com/xubiosueldos/conexionBD"
 	"github.com/xubiosueldos/framework"
 )
@@ -42,7 +42,7 @@ func ConceptoList(w http.ResponseWriter, r *http.Request) {
 		automigrateTablasPrivadas(db)
 		defer db.Close()
 
-		var conceptos []structConcepto.Condicion
+		var conceptos []structConcepto.Concepto
 
 		//Lista todos los conceptos
 		db.Find(&conceptos)
@@ -64,7 +64,7 @@ func ConceptoShow(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 		concepto_id := params["id"]
 
-		var conceptos structConcepto.Condicion //Con &var --> lo que devuelve el metodo se le asigna a la var
+		var conceptos structConcepto.Concepto //Con &var --> lo que devuelve el metodo se le asigna a la var
 
 		db := obtenerDB(tokenAutenticacion)
 		automigrateTablasPrivadas(db)
@@ -92,8 +92,7 @@ func ConceptoAdd(w http.ResponseWriter, r *http.Request) {
 
 		decoder := json.NewDecoder(r.Body)
 
-		var concepto_data structConcepto.Condicion
-
+		var concepto_data structConcepto.Concepto
 		//&concepto_data para decirle que es la var que no tiene datos y va a tener que rellenar
 		if err := decoder.Decode(&concepto_data); err != nil {
 			framework.RespondError(w, http.StatusBadRequest, err.Error())
@@ -115,7 +114,7 @@ func ConceptoAdd(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func ConpcetoUpdate(w http.ResponseWriter, r *http.Request) {
+func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 
 	tokenAutenticacion, tokenError := checkTokenValido(r)
 
@@ -137,7 +136,7 @@ func ConpcetoUpdate(w http.ResponseWriter, r *http.Request) {
 
 		decoder := json.NewDecoder(r.Body)
 
-		var concepto_data structConcepto.Condicion
+		var concepto_data structConcepto.Concepto
 
 		if err := decoder.Decode(&concepto_data); err != nil {
 			framework.RespondError(w, http.StatusBadRequest, err.Error())
@@ -196,7 +195,7 @@ func ConceptoRemove(w http.ResponseWriter, r *http.Request) {
 		defer db.Close()
 
 		//--Borrado Fisico
-		if err := db.Unscoped().Where("id = ?", concepto_id).Delete(structConcepto.concepto{}).Error; err != nil {
+		if err := db.Unscoped().Where("id = ?", concepto_id).Delete(structConcepto.Concepto{}).Error; err != nil {
 
 			framework.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
@@ -206,6 +205,12 @@ func ConceptoRemove(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+func automigrateTablasPrivadas(db *gorm.DB) {
+
+	//para actualizar tablas...agrega columnas e indices, pero no elimina
+	db.AutoMigrate(&structConcepto.Concepto{})
+}
+
 func obtenerDB(tokenAutenticacion *publico.TokenAutenticacion) *gorm.DB {
 
 	token := *tokenAutenticacion

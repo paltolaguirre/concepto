@@ -28,33 +28,33 @@ func newRouter() *mux.Router {
 
 var routes = Routes{
 	Route{
-		"ConpcetoList",
+		"ConceptoList",
 		"GET",
-		"/conpceto",
-		ConpcetoList,
+		"/concepto",
+		ConceptoList,
 	},
 	Route{
-		"ConpcetoShow",
+		"ConceptoShow",
 		"GET",
-		"/conpceto/{id}",
-		ConpcetoShow,
+		"/concepto/{id}",
+		ConceptoShow,
 	},
 	Route{
-		"ConpcetoAdd",
+		"ConceptoAdd",
 		"POST",
-		"/conpceto",
-		ConpcetoAdd,
+		"/concepto",
+		ConceptoAdd,
 	},
 	Route{
-		"ConpcetoUpdate",
+		"ConceptoUpdate",
 		"PUT",
-		"/conpceto/{id}",
-		ConpcetoUpdate,
+		"/concepto/{id}",
+		ConceptoUpdate,
 	},
 	Route{
-		"ConpcetoRemove",
+		"ConceptoRemove",
 		"DELETE",
-		"/conpceto/{id}",
-		ConpcetoRemove,
+		"/concepto/{id}",
+		ConceptoRemove,
 	},
 }

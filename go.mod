@@ -1,10 +1,11 @@
-module github.com/xubiosueldos/helpers
+module github.com/xubiosueldos/concepto
+
+go 1.12
 
 require (
-	github.com/gorilla/mux v1.7.0
-	github.com/jinzhu/gorm v1.9.2
-	github.com/xubiosueldos/autenticacion v0.0.0-20190425182354-6a9aac7dcae4
-	github.com/xubiosueldos/conexionBD v0.0.0-20190425182629-f2ef884a3abd
+	github.com/gorilla/mux v1.7.1
+	github.com/jinzhu/gorm v1.9.5
+	github.com/xubiosueldos/autenticacion v0.0.0-20190502190535-473a26c168c7
+	github.com/xubiosueldos/conexionBD v0.0.0-20190503185834-fb2a794e1c8e
 	github.com/xubiosueldos/framework v0.0.0-20190502133422-d53dd93b5196
-	github.com/xubiosueldos/legajo v1.0.1-0.20190412135527-8b5c7d2da8bc
 )
