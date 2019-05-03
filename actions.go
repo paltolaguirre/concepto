@@ -234,9 +234,9 @@ func checkTokenValido(r *http.Request) (*publico.TokenAutenticacion, *publico.Er
 
 	req, _ := http.NewRequest("GET", url, nil)
 
-	token := r.Header.Get("Token")
+	header := r.Header.Get("Authorization")
 
-	req.Header.Add("token", token)
+	req.Header.Add("Authorization", header)
 
 	res, _ := http.DefaultClient.Do(req)
 
