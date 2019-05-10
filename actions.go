@@ -45,11 +45,15 @@ func ConceptoList(w http.ResponseWriter, r *http.Request) {
 		var conceptos []structConcepto.Concepto
 
 		//Lista todos los conceptos
-		db.Find(&conceptos)
+		db.Raw(crearQueryMixta("concepto", tokenAutenticacion.Tenant)).Scan(&conceptos)
 
 		framework.RespondJSON(w, http.StatusOK, conceptos)
 	}
 
+}
+
+func crearQueryMixta(concepto string, tenant string) string {
+	return "select * from public." + concepto + " as tabla1 where tabla1.deleted_at is null union all select * from " + tenant + "." + concepto + " as tabla2 where tabla2.deleted_at is null"
 }
 
 func ConceptoShow(w http.ResponseWriter, r *http.Request) {
@@ -71,7 +75,8 @@ func ConceptoShow(w http.ResponseWriter, r *http.Request) {
 		defer db.Close()
 
 		//gorm:auto_preload se usa para que complete todos los struct con su informacion
-		if err := db.Set("gorm:auto_preload", true).First(&conceptos, "id = ?", concepto_id).Error; gorm.IsRecordNotFoundError(err) {
+
+		if err := db.Set("gorm:auto_preload", true).Raw(" select * from (" + crearQueryMixta("concepto", tokenAutenticacion.Tenant) + ") as tabla where tabla.id = " + concepto_id).Scan(&conceptos).Error; gorm.IsRecordNotFoundError(err) {
 			framework.RespondError(w, http.StatusNotFound, err.Error())
 			return
 		}
@@ -127,7 +132,7 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 		//se convirtió el string en uint para poder comparar
 		param_conceptoid, _ := strconv.ParseUint(params["id"], 10, 64)
-		p_conpcetoid := uint(param_conceptoid)
+		p_conpcetoid := int(param_conceptoid)
 
 		if p_conpcetoid == 0 {
 			framework.RespondError(w, http.StatusNotFound, "Debe ingresar un ID en la url")
