@@ -42,19 +42,19 @@ var routes = Routes{
 	Route{
 		"ConceptoAdd",
 		"POST",
-		"/concepto",
+		"/concepto/add",
 		ConceptoAdd,
 	},
 	Route{
 		"ConceptoUpdate",
 		"PUT",
-		"/concepto/{id}",
+		"/concepto/update/{id}",
 		ConceptoUpdate,
 	},
 	Route{
 		"ConceptoRemove",
 		"DELETE",
-		"/concepto/{id}",
+		"/concepto/remove/{id}",
 		ConceptoRemove,
 	},
 }
