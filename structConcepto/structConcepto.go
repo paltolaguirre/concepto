@@ -8,8 +8,10 @@ type Concepto struct {
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 	DeletedAt      *time.Time `sql:"index"`
-	Concepto       string     `json:"concepto"`
+	Nombre         string     `json:"nombre"`
 	Codigo         string     `json:"codigo"`
+	Descripcion    string     `json:"descripcion"`
+	Activo         int        `json:"activo"`
 	Tipo           string     `json:"tipo"`
 	CuentaContable int        `json:"cuentacontable"`
 }

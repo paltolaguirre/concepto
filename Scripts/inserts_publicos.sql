@@ -1,0 +1,23 @@
+﻿INSERT INTO concepto(
+            id, nombre, cuenta_contable ,created_at ,codigo, descripcion, 
+            activo, tipo ) values
+(-1,'Sueldo Básico',-46,current_timestamp, '' , '' , 1 , '' ) , 
+(-2,'Sueldo Anual Complementario',-46,current_timestamp, '' , '' , 1 , '' ) , 
+(-3,'Vacaciones',-46,current_timestamp, '' , '' , 1 , '' ) , 
+(-4,'Antiguedad',-46,current_timestamp, '' , '' , 1 , '' ) , 
+(-5,'Horas Extras 50%',-46,current_timestamp, '' , '' , 1 , '' ) , 
+(-6,'Horas Extras 100%',-46,current_timestamp, '' , '' , 1 , '' ) , 
+(-7,'Indemnización por Despido',-46,current_timestamp, '' , '' , 1 , '' ) , 
+(-8,'Preaviso',	-46,current_timestamp, '' , '' , 1 , '' ) , 
+(-9,'SAC sobre Preaviso',-46,current_timestamp, '' , '' , 1 , '' ) , 
+(-10,'SAC sobre Vacaciones No Gozadas',	-46,current_timestamp, '' , '' , 1 , '' ) , 
+(-11,'Vacaciones No Gozadas',-46,current_timestamp, '' , '' , 1 , '' ) , 
+(-12,'Gratificación',-46,current_timestamp, '' , '' , 1 , '' ) , 
+(-13,'Integración Mes de despido',-46,current_timestamp, '' , '' , 1 , '' ) , 
+(-14,'SAC sobre Int. Mes de despido',-46,current_timestamp, '' , '' , 1 , '' ) , 
+(-15,'Días Enfermedad',-46,current_timestamp, '' , '' , 1 , '' ) , 
+(-16,'Días Accidente',-46,current_timestamp, '' , '' , 1 , '' ) , 
+(-17,'Días Faltas injustificadas',-46,current_timestamp, '' , '' , 1 , '' ) , 
+(-18,'Jubilación',-48,current_timestamp, '' , '' , 1 , '' ) , 
+(-19,'Ley 19.032',-48,current_timestamp, '' , '' , 1 , '' ) , 
+(-20,'Obra Social',-48,current_timestamp, '' , '' , 1 , '' ) ;

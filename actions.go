@@ -1,10 +1,15 @@
 package main
 
 import (
+	"bytes"
+	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
+	"unicode/utf8"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -24,10 +29,64 @@ type strhelper struct {
 	//	Activo      int    `json:"activo"`
 }
 
+type strHlprServlet struct {
+	//	gorm.Model
+	Username  string `json:"username"`
+	Tenant    string `json:"tenant"`
+	Token     string `json:"token"`
+	Operacion string `json:"operacion"`
+}
+
 /*
 func (strhelper) TableName() string {
 	return codigoHelper
 }*/
+
+func requestMonolitico(w http.ResponseWriter, r *http.Request, concepto_data structConcepto.Concepto, tokenAutenticacion *publico.TokenAutenticacion, codigo string) {
+
+	var strHlprSrv strHlprServlet
+	token := *tokenAutenticacion
+
+	strHlprSrv.Operacion = "HLP"
+	strHlprSrv.Tenant = token.Tenant
+	strHlprSrv.Token = token.Token
+
+	pagesJson, err := json.Marshal(token)
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	url := "https://localhost:8443/NXV/" + codigo + "GoServlet"
+
+	fmt.Println("URL:>", url)
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(pagesJson))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	fmt.Println("response Status:", resp.Status)
+	fmt.Println("response Headers:", resp.Header)
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	s := string(body)
+	fmt.Println("BYTES RECIBIDOS :", len(s))
+
+	fixUtf := func(r rune) rune {
+		if r == utf8.RuneError {
+			return -1
+		}
+		return r
+	}
+
+	var dataStruct []strhelper
+	json.Unmarshal([]byte(strings.Map(fixUtf, s)), &dataStruct)
+
+	fmt.Println("BYTES RECIBIDOS :", string(body))
+
+	framework.RespondJSON(w, http.StatusOK, dataStruct)
+}
 
 func ConceptoList(w http.ResponseWriter, r *http.Request) {
 
@@ -53,7 +112,7 @@ func ConceptoList(w http.ResponseWriter, r *http.Request) {
 }
 
 func crearQueryMixta(concepto string, tenant string) string {
-	return "select * from public." + concepto + " as tabla1 where tabla1.deleted_at is null union all select * from " + tenant + "." + concepto + " as tabla2 where tabla2.deleted_at is null"
+	return "select * from public." + concepto + " as tabla1 where tabla1.deleted_at is null and activo = 1 union all select * from " + tenant + "." + concepto + " as tabla2 where tabla2.deleted_at is null and activo = 1"
 }
 
 func ConceptoShow(w http.ResponseWriter, r *http.Request) {
@@ -107,6 +166,9 @@ func ConceptoAdd(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 
 		db := obtenerDB(tokenAutenticacion)
+
+		requestMonolitico(w, r, concepto_data, tokenAutenticacion, "cuenta")
+
 		automigrateTablasPrivadas(db)
 		defer db.Close()
 
