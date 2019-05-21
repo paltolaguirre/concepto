@@ -4,12 +4,11 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
-	"strings"
-	"unicode/utf8"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -29,12 +28,23 @@ type strhelper struct {
 	//	Activo      int    `json:"activo"`
 }
 
+type strResponse struct {
+	//	gorm.Model
+	Exists string `json:"exists"`
+}
+
 type strHlprServlet struct {
 	//	gorm.Model
-	Username  string `json:"username"`
-	Tenant    string `json:"tenant"`
-	Token     string `json:"token"`
-	Operacion string `json:"operacion"`
+	Username       string `json:"username"`
+	Tenant         string `json:"tenant"`
+	Token          string `json:"token"`
+	Options        string `json:"options"`
+	CuentaContable int    `json:"cuentacontable"`
+}
+
+type requestMono struct {
+	Value interface{}
+	Error error
 }
 
 /*
@@ -42,16 +52,17 @@ func (strhelper) TableName() string {
 	return codigoHelper
 }*/
 
-func requestMonolitico(w http.ResponseWriter, r *http.Request, concepto_data structConcepto.Concepto, tokenAutenticacion *publico.TokenAutenticacion, codigo string) {
+func (s *requestMono) requestMonolitico(options string, w http.ResponseWriter, r *http.Request, concepto_data structConcepto.Concepto, tokenAutenticacion *publico.TokenAutenticacion, codigo string) *requestMono {
 
 	var strHlprSrv strHlprServlet
 	token := *tokenAutenticacion
 
-	strHlprSrv.Operacion = "HLP"
+	strHlprSrv.Options = options
 	strHlprSrv.Tenant = token.Tenant
 	strHlprSrv.Token = token.Token
-
-	pagesJson, err := json.Marshal(token)
+	strHlprSrv.Username = token.Username
+	strHlprSrv.CuentaContable = concepto_data.CuentaContable
+	pagesJson, err := json.Marshal(strHlprSrv)
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	url := "https://localhost:8443/NXV/" + codigo + "GoServlet"
 
@@ -70,22 +81,24 @@ func requestMonolitico(w http.ResponseWriter, r *http.Request, concepto_data str
 	fmt.Println("response Headers:", resp.Header)
 	body, _ := ioutil.ReadAll(resp.Body)
 
-	s := string(body)
-	fmt.Println("BYTES RECIBIDOS :", len(s))
-
-	fixUtf := func(r rune) rune {
-		if r == utf8.RuneError {
-			return -1
+	str := string(body)
+	fmt.Println("BYTES RECIBIDOS :", len(str))
+	/*
+		fixUtf := func(r rune) rune {
+			if r == utf8.RuneError {
+				return -1
+			}
+			return r
 		}
-		return r
+
+			var dataStruct []strResponse
+			json.Unmarshal([]byte(strings.Map(fixUtf, s)), &dataStruct)*/
+
+	if str == "0" {
+		framework.RespondError(w, http.StatusNotFound, "Cuenta Inexistente")
+		s.Error = errors.New("Cuenta Inexistente")
 	}
-
-	var dataStruct []strhelper
-	json.Unmarshal([]byte(strings.Map(fixUtf, s)), &dataStruct)
-
-	fmt.Println("BYTES RECIBIDOS :", string(body))
-
-	framework.RespondJSON(w, http.StatusOK, dataStruct)
+	return s
 }
 
 func ConceptoList(w http.ResponseWriter, r *http.Request) {
@@ -167,10 +180,15 @@ func ConceptoAdd(w http.ResponseWriter, r *http.Request) {
 
 		db := obtenerDB(tokenAutenticacion)
 
-		requestMonolitico(w, r, concepto_data, tokenAutenticacion, "cuenta")
-
 		automigrateTablasPrivadas(db)
 		defer db.Close()
+
+		var requestMono requestMono
+
+		if err := requestMono.requestMonolitico("CANQUERY", w, r, concepto_data, tokenAutenticacion, "cuenta").Error; err != nil {
+			framework.RespondError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
 
 		if err := db.Create(&concepto_data).Error; err != nil {
 			framework.RespondError(w, http.StatusInternalServerError, err.Error())
@@ -212,6 +230,13 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 
 		conpcetoid := concepto_data.ID
+
+		var requestMono requestMono
+
+		if err := requestMono.requestMonolitico("CANQUERY", w, r, concepto_data, tokenAutenticacion, "cuenta").Error; err != nil {
+			framework.RespondError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
 
 		if p_conpcetoid == conpcetoid || conpcetoid == 0 {
 
@@ -260,6 +285,20 @@ func ConceptoRemove(w http.ResponseWriter, r *http.Request) {
 		db := obtenerDB(tokenAutenticacion)
 		automigrateTablasPrivadas(db)
 		defer db.Close()
+		/*
+			var conceptos structConcepto.Concepto //Con &var --> lo que devuelve el metodo se le asigna a la var
+
+				if err := db.Set("gorm:auto_preload", true).Raw(" select * from (" + crearQueryMixta("concepto", tokenAutenticacion.Tenant) + ") as tabla where tabla.id = " + concepto_id).Scan(&conceptos).Error; gorm.IsRecordNotFoundError(err) {
+					framework.RespondError(w, http.StatusNotFound, err.Error())
+					return
+				}
+
+				var requestMono requestMono
+
+				if err := requestMono.requestMonolitico("CANQUERY", w, r, conceptos, tokenAutenticacion, "cuenta").Error; err != nil {
+					framework.RespondError(w, http.StatusInternalServerError, err.Error())
+					return
+				}*/
 
 		//--Borrado Fisico
 		if err := db.Unscoped().Where("id = ?", concepto_id).Delete(structConcepto.Concepto{}).Error; err != nil {
