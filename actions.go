@@ -10,12 +10,15 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/xubiosueldos/conexionBD/apiclientconexionbd"
+	"github.com/xubiosueldos/framework/configuracion"
+
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"github.com/xubiosueldos/autenticacion/apiclientautenticacion"
 	"github.com/xubiosueldos/autenticacion/publico"
 	"github.com/xubiosueldos/concepto/structConcepto"
-	"github.com/xubiosueldos/conexionBD"
 	"github.com/xubiosueldos/framework"
 )
 
@@ -51,8 +54,9 @@ type requestMono struct {
 func (strhelper) TableName() string {
 	return codigoHelper
 }*/
+var nombreMicroservicio string = "concepto"
 
-func (s *requestMono) requestMonolitico(options string, w http.ResponseWriter, r *http.Request, concepto_data structConcepto.Concepto, tokenAutenticacion *publico.TokenAutenticacion, codigo string) *requestMono {
+func (s *requestMono) requestMonolitico(options string, w http.ResponseWriter, r *http.Request, concepto_data structConcepto.Concepto, tokenAutenticacion *publico.Security, codigo string) *requestMono {
 
 	var strHlprSrv strHlprServlet
 	token := *tokenAutenticacion
@@ -103,15 +107,11 @@ func (s *requestMono) requestMonolitico(options string, w http.ResponseWriter, r
 
 func ConceptoList(w http.ResponseWriter, r *http.Request) {
 
-	tokenAutenticacion, tokenError := checkTokenValido(r)
+	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
+	if tokenValido {
 
-	if tokenError != nil {
-		errorToken(w, tokenError)
-		return
-	} else {
-
-		db := obtenerDB(tokenAutenticacion)
-		automigrateTablasPrivadas(db)
+		versionMicroservicio := obtenerVersionConcepto()
+		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
 		defer db.Close()
 
 		var conceptos []structConcepto.Concepto
@@ -130,20 +130,16 @@ func crearQueryMixta(concepto string, tenant string) string {
 
 func ConceptoShow(w http.ResponseWriter, r *http.Request) {
 
-	tokenAutenticacion, tokenError := checkTokenValido(r)
-
-	if tokenError != nil {
-		errorToken(w, tokenError)
-		return
-	} else {
+	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
+	if tokenValido {
 
 		params := mux.Vars(r)
 		concepto_id := params["id"]
 
 		var conceptos structConcepto.Concepto //Con &var --> lo que devuelve el metodo se le asigna a la var
 
-		db := obtenerDB(tokenAutenticacion)
-		automigrateTablasPrivadas(db)
+		versionMicroservicio := obtenerVersionConcepto()
+		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
 		defer db.Close()
 
 		//gorm:auto_preload se usa para que complete todos los struct con su informacion
@@ -160,12 +156,8 @@ func ConceptoShow(w http.ResponseWriter, r *http.Request) {
 
 func ConceptoAdd(w http.ResponseWriter, r *http.Request) {
 
-	tokenAutenticacion, tokenError := checkTokenValido(r)
-
-	if tokenError != nil {
-		errorToken(w, tokenError)
-		return
-	} else {
+	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
+	if tokenValido {
 
 		decoder := json.NewDecoder(r.Body)
 
@@ -178,9 +170,9 @@ func ConceptoAdd(w http.ResponseWriter, r *http.Request) {
 
 		defer r.Body.Close()
 
-		db := obtenerDB(tokenAutenticacion)
+		versionMicroservicio := obtenerVersionConcepto()
+		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
 
-		automigrateTablasPrivadas(db)
 		defer db.Close()
 
 		var requestMono requestMono
@@ -201,13 +193,8 @@ func ConceptoAdd(w http.ResponseWriter, r *http.Request) {
 
 func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 
-	tokenAutenticacion, tokenError := checkTokenValido(r)
-
-	if tokenError != nil {
-
-		errorToken(w, tokenError)
-		return
-	} else {
+	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
+	if tokenValido {
 
 		params := mux.Vars(r)
 		//se convirtió el string en uint para poder comparar
@@ -242,8 +229,9 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 
 			concepto_data.ID = p_conpcetoid
 
-			db := obtenerDB(tokenAutenticacion)
-			automigrateTablasPrivadas(db)
+			versionMicroservicio := obtenerVersionConcepto()
+			db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
+
 			defer db.Close()
 
 			//abro una transacción para que si hay un error no persista en la DB
@@ -270,20 +258,16 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 
 func ConceptoRemove(w http.ResponseWriter, r *http.Request) {
 
-	tokenAutenticacion, tokenError := checkTokenValido(r)
-
-	if tokenError != nil {
-
-		errorToken(w, tokenError)
-		return
-	} else {
+	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
+	if tokenValido {
 
 		//Para obtener los parametros por la url
 		params := mux.Vars(r)
 		concepto_id := params["id"]
 
-		db := obtenerDB(tokenAutenticacion)
-		automigrateTablasPrivadas(db)
+		versionMicroservicio := obtenerVersionConcepto()
+		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
+
 		defer db.Close()
 		/*
 			var conceptos structConcepto.Concepto //Con &var --> lo que devuelve el metodo se le asigna a la var
@@ -311,55 +295,14 @@ func ConceptoRemove(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
-func automigrateTablasPrivadas(db *gorm.DB) {
+func AutomigrateTablasPrivadas(db *gorm.DB) {
 
 	//para actualizar tablas...agrega columnas e indices, pero no elimina
 	db.AutoMigrate(&structConcepto.Concepto{})
 }
 
-func obtenerDB(tokenAutenticacion *publico.TokenAutenticacion) *gorm.DB {
+func obtenerVersionConcepto() int {
+	configuracion := configuracion.GetInstance()
 
-	token := *tokenAutenticacion
-	tenant := token.Tenant
-
-	return conexionBD.ConnectBD(tenant)
-
-}
-
-func errorToken(w http.ResponseWriter, tokenError *publico.Error) {
-	errorToken := *tokenError
-	framework.RespondError(w, errorToken.ErrorCodigo, errorToken.ErrorNombre)
-}
-
-func checkTokenValido(r *http.Request) (*publico.TokenAutenticacion, *publico.Error) {
-
-	var tokenAutenticacion *publico.TokenAutenticacion
-	var tokenError *publico.Error
-
-	url := "http://localhost:8081/check-token"
-
-	req, _ := http.NewRequest("GET", url, nil)
-
-	header := r.Header.Get("Authorization")
-
-	req.Header.Add("Authorization", header)
-
-	res, _ := http.DefaultClient.Do(req)
-
-	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
-
-	if res.StatusCode != 400 {
-
-		// tokenAutenticacion = &(TokenAutenticacion{})
-		tokenAutenticacion = new(publico.TokenAutenticacion)
-		json.Unmarshal([]byte(string(body)), tokenAutenticacion)
-
-	} else {
-		tokenError = new(publico.Error)
-		json.Unmarshal([]byte(string(body)), tokenError)
-
-	}
-
-	return tokenAutenticacion, tokenError
+	return configuracion.Versionconcepto
 }
