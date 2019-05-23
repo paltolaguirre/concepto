@@ -202,7 +202,7 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 		p_conpcetoid := int(param_conceptoid)
 
 		if p_conpcetoid == 0 {
-			framework.RespondError(w, http.StatusNotFound, "Debe ingresar un ID en la url")
+			framework.RespondError(w, http.StatusNotFound, framework.IdParametroVacio)
 			return
 		}
 
@@ -249,7 +249,7 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 			framework.RespondJSON(w, http.StatusOK, concepto_data)
 
 		} else {
-			framework.RespondError(w, http.StatusNotFound, "El ID de la url debe ser el mismo que el del struct")
+			framework.RespondError(w, http.StatusNotFound, framework.IdParametroDistintoStruct)
 			return
 		}
 	}
@@ -291,7 +291,7 @@ func ConceptoRemove(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		framework.RespondJSON(w, http.StatusOK, "El concepto con ID "+concepto_id+" ha sido eliminado correctamente")
+		framework.RespondJSON(w, http.StatusOK, framework.Concepto+concepto_id+framework.MicroservicioEliminado)
 	}
 
 }
