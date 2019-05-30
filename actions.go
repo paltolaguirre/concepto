@@ -71,9 +71,7 @@ func (s *requestMono) requestMonolitico(options string, w http.ResponseWriter, r
 	pagesJson, err := json.Marshal(strHlprSrv)
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
-	//url := "https://localhost:8443/NXV/" + codigo + "GoServlet"
 	url := configuracion.GetUrlMonolitico() + codigo + "GoServlet"
-	//url := configuracion.Protocolomonolitico + "://" + configuracion.Dominiomonolitico + ":" + configuracion.Puertomonolitico + "/NXV/" + codigo + "GoServlet"
 
 	fmt.Println("URL:>", url)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(pagesJson))
