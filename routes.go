@@ -30,31 +30,31 @@ var routes = Routes{
 	Route{
 		"ConceptoList",
 		"GET",
-		"/conceptos",
+		"/api/concepto/conceptos",
 		ConceptoList,
 	},
 	Route{
 		"ConceptoShow",
 		"GET",
-		"/conceptos/{id}",
+		"/api/concepto/conceptos/{id}",
 		ConceptoShow,
 	},
 	Route{
 		"ConceptoAdd",
 		"POST",
-		"/conceptos/add",
+		"/api/concepto/conceptos",
 		ConceptoAdd,
 	},
 	Route{
 		"ConceptoUpdate",
 		"PUT",
-		"/conceptos/update/{id}",
+		"/api/concepto/conceptos/{id}",
 		ConceptoUpdate,
 	},
 	Route{
 		"ConceptoRemove",
 		"DELETE",
-		"/conceptos/remove/{id}",
+		"/api/concepto/conceptos/{id}",
 		ConceptoRemove,
 	},
 }

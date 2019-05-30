@@ -58,6 +58,8 @@ var nombreMicroservicio string = "concepto"
 
 func (s *requestMono) requestMonolitico(options string, w http.ResponseWriter, r *http.Request, concepto_data structConcepto.Concepto, tokenAutenticacion *publico.Security, codigo string) *requestMono {
 
+	//configuracion := configuracion.GetInstance()
+
 	var strHlprSrv strHlprServlet
 	token := *tokenAutenticacion
 
@@ -68,7 +70,8 @@ func (s *requestMono) requestMonolitico(options string, w http.ResponseWriter, r
 	strHlprSrv.CuentaContable = concepto_data.CuentaContable
 	pagesJson, err := json.Marshal(strHlprSrv)
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	url := "https://localhost:8443/NXV/" + codigo + "GoServlet"
+
+	url := configuracion.GetUrlMonolitico() + codigo + "GoServlet"
 
 	fmt.Println("URL:>", url)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(pagesJson))
