@@ -112,6 +112,8 @@ github.com/xubiosueldos/autenticacion v0.0.0-20190603133913-404abdfcc8f4 h1:hY5p
 github.com/xubiosueldos/autenticacion v0.0.0-20190603133913-404abdfcc8f4/go.mod h1:yQOeUe1ZqliqW3VuepvbudAVZbZ6hrnzMpzOBErpQKc=
 github.com/xubiosueldos/autenticacion v0.0.0-20190603152240-bc1cf351b444 h1:WmMiNHNtsHVZvfyv8ar20EuQp4crPHl3Wqsjesfu21o=
 github.com/xubiosueldos/autenticacion v0.0.0-20190603152240-bc1cf351b444/go.mod h1:CH5cUunbUlXPMoKgiBtnxy1BAZUnIrMQDTayvBnrZ7s=
+github.com/xubiosueldos/autenticacion v0.0.0-20190603174728-c842d4c40f8b h1:S45k3hMV9LFE9HfEu3gPyRGmjFvnumgpgFBk1r/XQV0=
+github.com/xubiosueldos/autenticacion v0.0.0-20190603174728-c842d4c40f8b/go.mod h1:CH5cUunbUlXPMoKgiBtnxy1BAZUnIrMQDTayvBnrZ7s=
 github.com/xubiosueldos/concepto v0.0.0-20190503183945-504f1d70ea0d h1:pKcn/v33AGD09jlWDmtbywhZgdZXG72jqLT7uQKxRhk=
 github.com/xubiosueldos/conexionBD v0.0.0-20190130160548-5347150de672 h1:bsNPQCV+KO5yDA+//+83elwVB+w0YouhPfF3Fn0Isig=
 github.com/xubiosueldos/conexionBD v0.0.0-20190130160548-5347150de672/go.mod h1:w+NLrmGfHNCU1qTKiJB519uGgyZmasmSqDoCmEoXV28=
