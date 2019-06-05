@@ -56,6 +56,11 @@ func (strhelper) TableName() string {
 }*/
 var nombreMicroservicio string = "concepto"
 
+// Sirve para controlar si el server esta OK
+func Healthy(writer http.ResponseWriter, request *http.Request) {
+	writer.Write([]byte("Healthy"))
+}
+
 func (s *requestMono) requestMonolitico(options string, w http.ResponseWriter, r *http.Request, concepto_data structConcepto.Concepto, tokenAutenticacion *publico.Security, codigo string) *requestMono {
 
 	//configuracion := configuracion.GetInstance()
