@@ -85,13 +85,18 @@ func (s *requestMono) requestMonolitico(options string, w http.ResponseWriter, r
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		fmt.Println("Error: ", err)
 	}
 	defer resp.Body.Close()
 
 	fmt.Println("response Status:", resp.Status)
 	fmt.Println("response Headers:", resp.Header)
-	body, _ := ioutil.ReadAll(resp.Body)
+
+	body, err := ioutil.ReadAll(resp.Body)
+
+	if err != nil {
+		fmt.Println("Error: ", err)
+	}
 
 	str := string(body)
 	fmt.Println("BYTES RECIBIDOS :", len(str))
@@ -119,7 +124,8 @@ func ConceptoList(w http.ResponseWriter, r *http.Request) {
 	if tokenValido {
 
 		versionMicroservicio := obtenerVersionConcepto()
-		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
 		defer db.Close()
 
 		var conceptos []structConcepto.Concepto
@@ -147,7 +153,10 @@ func ConceptoShow(w http.ResponseWriter, r *http.Request) {
 		var conceptos structConcepto.Concepto //Con &var --> lo que devuelve el metodo se le asigna a la var
 
 		versionMicroservicio := obtenerVersionConcepto()
-		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
+
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
+
 		defer db.Close()
 
 		//gorm:auto_preload se usa para que complete todos los struct con su informacion
@@ -179,7 +188,9 @@ func ConceptoAdd(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 
 		versionMicroservicio := obtenerVersionConcepto()
-		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
+
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
 
 		defer db.Close()
 
@@ -206,7 +217,10 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 
 		params := mux.Vars(r)
 		//se convirtió el string en uint para poder comparar
-		param_conceptoid, _ := strconv.ParseUint(params["id"], 10, 64)
+		param_conceptoid, err := strconv.ParseUint(params["id"], 10, 64)
+		if err != nil {
+			fmt.Println(err)
+		}
 		p_conpcetoid := int(param_conceptoid)
 
 		if p_conpcetoid == 0 {
@@ -238,7 +252,9 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 			concepto_data.ID = p_conpcetoid
 
 			versionMicroservicio := obtenerVersionConcepto()
-			db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
+
+			tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+			db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
 
 			defer db.Close()
 
@@ -274,7 +290,9 @@ func ConceptoRemove(w http.ResponseWriter, r *http.Request) {
 		concepto_id := params["id"]
 
 		versionMicroservicio := obtenerVersionConcepto()
-		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
+
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
 
 		defer db.Close()
 		/*
