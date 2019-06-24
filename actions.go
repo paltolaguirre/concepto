@@ -72,7 +72,7 @@ func (s *requestMono) requestMonolitico(options string, w http.ResponseWriter, r
 	strHlprSrv.Tenant = token.Tenant
 	strHlprSrv.Token = token.Token
 	strHlprSrv.Username = token.Username
-	strHlprSrv.CuentaContable = concepto_data.CuentaContable
+	strHlprSrv.CuentaContable = &concepto_data.CuentaContable
 	pagesJson, err := json.Marshal(strHlprSrv)
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
@@ -126,7 +126,9 @@ func ConceptoList(w http.ResponseWriter, r *http.Request) {
 		versionMicroservicio := obtenerVersionConcepto()
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
-		defer db.Close()
+
+		//defer db.Close()
+		defer apiclientconexionbd.CerrarDB(db)
 
 		var conceptos []structConcepto.Concepto
 
@@ -157,7 +159,8 @@ func ConceptoShow(w http.ResponseWriter, r *http.Request) {
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
 
-		defer db.Close()
+		//defer db.Close()
+		defer apiclientconexionbd.CerrarDB(db)
 
 		//gorm:auto_preload se usa para que complete todos los struct con su informacion
 
@@ -192,7 +195,8 @@ func ConceptoAdd(w http.ResponseWriter, r *http.Request) {
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
 
-		defer db.Close()
+		//defer db.Close()
+		defer apiclientconexionbd.CerrarDB(db)
 
 		var requestMono requestMono
 
@@ -256,7 +260,8 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 			tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 			db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
 
-			defer db.Close()
+			//defer db.Close()
+			defer apiclientconexionbd.CerrarDB(db)
 
 			//abro una transacción para que si hay un error no persista en la DB
 			tx := db.Begin()
@@ -294,7 +299,8 @@ func ConceptoRemove(w http.ResponseWriter, r *http.Request) {
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
 
-		defer db.Close()
+		//defer db.Close()
+		defer apiclientconexionbd.CerrarDB(db)
 		/*
 			var conceptos structConcepto.Concepto //Con &var --> lo que devuelve el metodo se le asigna a la var
 
