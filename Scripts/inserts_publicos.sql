@@ -18,6 +18,6 @@
 (-15,'Días Enfermedad',-46,current_timestamp, '' , '' , 1 , '' ) , 
 (-16,'Días Accidente',-46,current_timestamp, '' , '' , 1 , '' ) , 
 (-17,'Días Faltas injustificadas',-46,current_timestamp, '' , '' , 1 , '' ) , 
-(-18,'Jubilación',-48,current_timestamp, '' , '' , 1 , '' ) , 
-(-19,'Ley 19.032',-48,current_timestamp, '' , '' , 1 , '' ) , 
-(-20,'Obra Social',-48,current_timestamp, '' , '' , 1 , '' ) ;
+(-18,'Jubilación',-47,current_timestamp, '' , '' , 1 , '' ) , 
+(-19,'Ley 19.032',-47,current_timestamp, '' , '' , 1 , '' ) , 
+(-20,'Obra Social',-47,current_timestamp, '' , '' , 1 , '' ) ;
