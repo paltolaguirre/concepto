@@ -6,8 +6,8 @@ import "github.com/xubiosueldos/conexionBD/structGormModel"
 type Concepto struct {
 	structGormModel.GormModel
 	Nombre         *string `json:"nombre" gorm:"not null"`
-	Codigo         *string `json:"codigo" gorm:"not null"`
-	Descripcion    *string `json:"descripcion" gorm:"not null"`
+	Codigo         string  `json:"codigo"`
+	Descripcion    string  `json:"descripcion"`
 	Activo         int     `json:"activo"`
 	Tipo           string  `json:"tipo"`
 	CuentaContable *int    `json:"cuentacontable" gorm:"not null"`
