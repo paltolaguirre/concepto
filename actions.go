@@ -50,6 +50,10 @@ type requestMono struct {
 	Error error
 }
 
+type IdsAEliminar struct {
+	Ids []int `json:"ids"`
+}
+
 /*
 func (strhelper) TableName() string {
 	return codigoHelper
@@ -327,6 +331,47 @@ func ConceptoRemove(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
+func ConceptosRemoveMasivo(w http.ResponseWriter, r *http.Request) {
+	var resultadoDeEliminacion = make(map[int]string)
+	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
+	if tokenValido {
+
+		var idsEliminar IdsAEliminar
+		decoder := json.NewDecoder(r.Body)
+
+		if err := decoder.Decode(&idsEliminar); err != nil {
+			framework.RespondError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		versionMicroservicio := obtenerVersionConcepto()
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+
+		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
+
+		defer apiclientconexionbd.CerrarDB(db)
+
+		if len(idsEliminar.Ids) > 0 {
+			for i := 0; i < len(idsEliminar.Ids); i++ {
+				concepto_id := idsEliminar.Ids[i]
+				if err := db.Unscoped().Where("id = ?", concepto_id).Delete(structConcepto.Concepto{}).Error; err != nil {
+					//framework.RespondError(w, http.StatusInternalServerError, err.Error())
+					resultadoDeEliminacion[concepto_id] = string(err.Error())
+
+				} else {
+					resultadoDeEliminacion[concepto_id] = "Fue eliminado con exito"
+				}
+			}
+		} else {
+			framework.RespondError(w, http.StatusInternalServerError, "Seleccione por lo menos un registro")
+		}
+
+		framework.RespondJSON(w, http.StatusOK, resultadoDeEliminacion)
+	}
+
+}
+
 func AutomigrateTablasPrivadas(db *gorm.DB) {
 
 	//para actualizar tablas...agrega columnas e indices, pero no elimina
