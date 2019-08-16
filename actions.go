@@ -50,6 +50,10 @@ type requestMono struct {
 	Error error
 }
 
+type IdsAEliminar struct {
+	Ids []int `json:"ids"`
+}
+
 /*
 func (strhelper) TableName() string {
 	return codigoHelper
@@ -133,16 +137,16 @@ func ConceptoList(w http.ResponseWriter, r *http.Request) {
 		var conceptos []structConcepto.Concepto
 
 		//Lista todos los conceptos
-		db.Raw(crearQueryMixta("concepto", tokenAutenticacion.Tenant)).Scan(&conceptos)
-
+		db.Find(&conceptos)
 		framework.RespondJSON(w, http.StatusOK, conceptos)
 	}
 
 }
 
-func crearQueryMixta(concepto string, tenant string) string {
+/*func crearQueryMixta(concepto string, tenant string) string {
 	return "select * from public." + concepto + " as tabla1 where tabla1.deleted_at is null and activo = 1 union all select * from " + tenant + "." + concepto + " as tabla2 where tabla2.deleted_at is null and activo = 1"
 }
+*/
 
 func ConceptoShow(w http.ResponseWriter, r *http.Request) {
 
@@ -151,8 +155,12 @@ func ConceptoShow(w http.ResponseWriter, r *http.Request) {
 
 		params := mux.Vars(r)
 		concepto_id := params["id"]
-
-		var conceptos structConcepto.Concepto //Con &var --> lo que devuelve el metodo se le asigna a la var
+		p_conceptoid, err := strconv.Atoi(concepto_id)
+		if err != nil {
+			fmt.Println(err)
+		}
+		framework.CheckParametroVacio(p_conceptoid, w)
+		var concepto structConcepto.Concepto //Con &var --> lo que devuelve el metodo se le asigna a la var
 
 		versionMicroservicio := obtenerVersionConcepto()
 
@@ -163,13 +171,12 @@ func ConceptoShow(w http.ResponseWriter, r *http.Request) {
 		defer apiclientconexionbd.CerrarDB(db)
 
 		//gorm:auto_preload se usa para que complete todos los struct con su informacion
-
-		if err := db.Set("gorm:auto_preload", true).Raw(" select * from (" + crearQueryMixta("concepto", tokenAutenticacion.Tenant) + ") as tabla where tabla.id = " + concepto_id).Scan(&conceptos).Error; gorm.IsRecordNotFoundError(err) {
+		if err := db.Set("gorm:auto_preload", true).First(&concepto, "id = ?", concepto_id).Error; gorm.IsRecordNotFoundError(err) {
 			framework.RespondError(w, http.StatusNotFound, err.Error())
 			return
 		}
 
-		framework.RespondJSON(w, http.StatusOK, conceptos)
+		framework.RespondJSON(w, http.StatusOK, concepto)
 	}
 
 }
@@ -221,17 +228,13 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 
 		params := mux.Vars(r)
 		//se convirtió el string en uint para poder comparar
-		param_conceptoid, err := strconv.ParseUint(params["id"], 10, 64)
+		p_conpcetoid, err := strconv.Atoi(params["id"])
 		if err != nil {
 			fmt.Println(err)
 		}
-		p_conpcetoid := int(param_conceptoid)
 
-		if p_conpcetoid == 0 {
-			framework.RespondError(w, http.StatusNotFound, framework.IdParametroVacio)
-			return
-		}
-
+		framework.CheckParametroVacio(p_conpcetoid, w)
+		framework.CheckRegistroDefault(p_conpcetoid, w)
 		decoder := json.NewDecoder(r.Body)
 
 		var concepto_data structConcepto.Concepto
@@ -292,7 +295,10 @@ func ConceptoRemove(w http.ResponseWriter, r *http.Request) {
 
 		//Para obtener los parametros por la url
 		params := mux.Vars(r)
-		concepto_id := params["id"]
+		p_conpcetoid, err := strconv.Atoi(params["id"])
+		if err != nil {
+			fmt.Println(err)
+		}
 
 		versionMicroservicio := obtenerVersionConcepto()
 
@@ -317,24 +323,85 @@ func ConceptoRemove(w http.ResponseWriter, r *http.Request) {
 				}*/
 
 		//--Borrado Fisico
-		if err := db.Unscoped().Where("id = ?", concepto_id).Delete(structConcepto.Concepto{}).Error; err != nil {
+		framework.CheckParametroVacio(p_conpcetoid, w)
+		framework.CheckRegistroDefault(p_conpcetoid, w)
+		if err := db.Unscoped().Where("id = ?", p_conpcetoid).Delete(structConcepto.Concepto{}).Error; err != nil {
 
 			framework.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		framework.RespondJSON(w, http.StatusOK, framework.Concepto+concepto_id+framework.MicroservicioEliminado)
+		framework.RespondJSON(w, http.StatusOK, framework.Concepto+strconv.Itoa(p_conpcetoid)+framework.MicroservicioEliminado)
 	}
 
 }
+
+func ConceptosRemoveMasivo(w http.ResponseWriter, r *http.Request) {
+	var resultadoDeEliminacion = make(map[int]string)
+	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
+	if tokenValido {
+
+		var idsEliminar IdsAEliminar
+		decoder := json.NewDecoder(r.Body)
+
+		if err := decoder.Decode(&idsEliminar); err != nil {
+			framework.RespondError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		versionMicroservicio := obtenerVersionConcepto()
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+
+		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
+
+		defer apiclientconexionbd.CerrarDB(db)
+
+		if len(idsEliminar.Ids) > 0 {
+			for i := 0; i < len(idsEliminar.Ids); i++ {
+				concepto_id := idsEliminar.Ids[i]
+				if err := db.Unscoped().Where("id = ?", concepto_id).Delete(structConcepto.Concepto{}).Error; err != nil {
+					//framework.RespondError(w, http.StatusInternalServerError, err.Error())
+					resultadoDeEliminacion[concepto_id] = string(err.Error())
+
+				} else {
+					resultadoDeEliminacion[concepto_id] = "Fue eliminado con exito"
+				}
+			}
+		} else {
+			framework.RespondError(w, http.StatusInternalServerError, "Seleccione por lo menos un registro")
+		}
+
+		framework.RespondJSON(w, http.StatusOK, resultadoDeEliminacion)
+	}
+
+}
+
 func AutomigrateTablasPrivadas(db *gorm.DB) {
 
 	//para actualizar tablas...agrega columnas e indices, pero no elimina
 	db.AutoMigrate(&structConcepto.Concepto{})
+
+	obtenerConceptosPublicos(db)
 }
 
 func obtenerVersionConcepto() int {
 	configuracion := configuracion.GetInstance()
 
 	return configuracion.Versionconcepto
+}
+
+func obtenerConceptosPublicos(db *gorm.DB) {
+	var w http.ResponseWriter
+	var conceptos []structConcepto.Concepto
+	db_public := apiclientconexionbd.ObtenerDB("public", "", 0, AutomigrateTablasPrivadas)
+
+	db_public.Find(&conceptos)
+	for i := 0; i < len(conceptos); i++ {
+		concepto := conceptos[i]
+		if err := db.Save(&concepto).Error; err != nil {
+			framework.RespondError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
 }

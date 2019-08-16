@@ -11,4 +11,5 @@ type Concepto struct {
 	Activo         int     `json:"activo"`
 	Tipo           string  `json:"tipo"`
 	CuentaContable *int    `json:"cuentacontable" gorm:"not null"`
+	Esimprimible   bool    `json:"esimprimible"`
 }
