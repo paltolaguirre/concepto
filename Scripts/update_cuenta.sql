@@ -1,1 +1,0 @@
-UPDATE concepto SET cuenta_contable = -47 WHERE id IN (-18,-19,-20);
