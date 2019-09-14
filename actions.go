@@ -127,11 +127,14 @@ func ConceptoList(w http.ResponseWriter, r *http.Request) {
 	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
 	if tokenValido {
 
-		versionMicroservicio := obtenerVersionConcepto()
+		/*versionMicroservicio := obtenerVersionConcepto()
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
 
-		//defer db.Close()
+		//defer db.Close()*/
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+		db := apiclientconexionbd.ObtenerDB(tenant)
+
 		defer apiclientconexionbd.CerrarDB(db)
 
 		var conceptos []structConcepto.Concepto
@@ -162,12 +165,14 @@ func ConceptoShow(w http.ResponseWriter, r *http.Request) {
 		framework.CheckParametroVacio(p_conceptoid, w)
 		var concepto structConcepto.Concepto //Con &var --> lo que devuelve el metodo se le asigna a la var
 
-		versionMicroservicio := obtenerVersionConcepto()
+		/*versionMicroservicio := obtenerVersionConcepto()
 
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
 
-		//defer db.Close()
+		//defer db.Close()*/
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+		db := apiclientconexionbd.ObtenerDB(tenant)
 		defer apiclientconexionbd.CerrarDB(db)
 
 		//gorm:auto_preload se usa para que complete todos los struct con su informacion
@@ -197,12 +202,14 @@ func ConceptoAdd(w http.ResponseWriter, r *http.Request) {
 
 		defer r.Body.Close()
 
-		versionMicroservicio := obtenerVersionConcepto()
+		/*versionMicroservicio := obtenerVersionConcepto()
 
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
 
-		//defer db.Close()
+		//defer db.Close()*/
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+		db := apiclientconexionbd.ObtenerDB(tenant)
 		defer apiclientconexionbd.CerrarDB(db)
 
 		var requestMono requestMono
@@ -258,12 +265,14 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 
 			concepto_data.ID = p_conpcetoid
 
-			versionMicroservicio := obtenerVersionConcepto()
+			/*versionMicroservicio := obtenerVersionConcepto()
 
 			tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 			db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
 
-			//defer db.Close()
+			//defer db.Close()*/
+			tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+			db := apiclientconexionbd.ObtenerDB(tenant)
 			defer apiclientconexionbd.CerrarDB(db)
 
 			//abro una transacción para que si hay un error no persista en la DB
@@ -300,12 +309,14 @@ func ConceptoRemove(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(err)
 		}
 
-		versionMicroservicio := obtenerVersionConcepto()
+		/*versionMicroservicio := obtenerVersionConcepto()
 
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
 
-		//defer db.Close()
+		//defer db.Close()*/
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+		db := apiclientconexionbd.ObtenerDB(tenant)
 		defer apiclientconexionbd.CerrarDB(db)
 		/*
 			var conceptos structConcepto.Concepto //Con &var --> lo que devuelve el metodo se le asigna a la var
@@ -349,10 +360,12 @@ func ConceptosRemoveMasivo(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		versionMicroservicio := obtenerVersionConcepto()
+		/*versionMicroservicio := obtenerVersionConcepto()
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
+		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)*/
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+		db := apiclientconexionbd.ObtenerDB(tenant)
 
 		defer apiclientconexionbd.CerrarDB(db)
 
@@ -374,10 +387,4 @@ func ConceptosRemoveMasivo(w http.ResponseWriter, r *http.Request) {
 		framework.RespondJSON(w, http.StatusOK, resultadoDeEliminacion)
 	}
 
-}
-
-func obtenerVersionConcepto() int {
-	configuracion := configuracion.GetInstance()
-
-	return configuracion.Versionconcepto
 }
