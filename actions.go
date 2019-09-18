@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/xubiosueldos/conexionBD/apiclientconexionbd"
+	"github.com/xubiosueldos/conexionBD"
 	"github.com/xubiosueldos/framework/configuracion"
 
 	"github.com/gorilla/mux"
@@ -127,15 +127,10 @@ func ConceptoList(w http.ResponseWriter, r *http.Request) {
 	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
 	if tokenValido {
 
-		/*versionMicroservicio := obtenerVersionConcepto()
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
+		db := conexionBD.ObtenerDB(tenant)
 
-		//defer db.Close()*/
-		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant)
-
-		defer apiclientconexionbd.CerrarDB(db)
+		defer conexionBD.CerrarDB(db)
 
 		var conceptos []structConcepto.Concepto
 
@@ -165,15 +160,9 @@ func ConceptoShow(w http.ResponseWriter, r *http.Request) {
 		framework.CheckParametroVacio(p_conceptoid, w)
 		var concepto structConcepto.Concepto //Con &var --> lo que devuelve el metodo se le asigna a la var
 
-		/*versionMicroservicio := obtenerVersionConcepto()
-
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
-
-		//defer db.Close()*/
-		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant)
-		defer apiclientconexionbd.CerrarDB(db)
+		db := conexionBD.ObtenerDB(tenant)
+		defer conexionBD.CerrarDB(db)
 
 		//gorm:auto_preload se usa para que complete todos los struct con su informacion
 		if err := db.Set("gorm:auto_preload", true).First(&concepto, "id = ?", concepto_id).Error; gorm.IsRecordNotFoundError(err) {
@@ -202,15 +191,9 @@ func ConceptoAdd(w http.ResponseWriter, r *http.Request) {
 
 		defer r.Body.Close()
 
-		/*versionMicroservicio := obtenerVersionConcepto()
-
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
-
-		//defer db.Close()*/
-		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant)
-		defer apiclientconexionbd.CerrarDB(db)
+		db := conexionBD.ObtenerDB(tenant)
+		defer conexionBD.CerrarDB(db)
 
 		var requestMono requestMono
 
@@ -265,15 +248,9 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 
 			concepto_data.ID = p_conpcetoid
 
-			/*versionMicroservicio := obtenerVersionConcepto()
-
 			tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-			db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
-
-			//defer db.Close()*/
-			tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-			db := apiclientconexionbd.ObtenerDB(tenant)
-			defer apiclientconexionbd.CerrarDB(db)
+			db := conexionBD.ObtenerDB(tenant)
+			defer conexionBD.CerrarDB(db)
 
 			//abro una transacción para que si hay un error no persista en la DB
 			tx := db.Begin()
@@ -309,15 +286,9 @@ func ConceptoRemove(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(err)
 		}
 
-		/*versionMicroservicio := obtenerVersionConcepto()
-
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
-
-		//defer db.Close()*/
-		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant)
-		defer apiclientconexionbd.CerrarDB(db)
+		db := conexionBD.ObtenerDB(tenant)
+		defer conexionBD.CerrarDB(db)
 		/*
 			var conceptos structConcepto.Concepto //Con &var --> lo que devuelve el metodo se le asigna a la var
 
@@ -360,14 +331,10 @@ func ConceptosRemoveMasivo(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		/*versionMicroservicio := obtenerVersionConcepto()
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+		db := conexionBD.ObtenerDB(tenant)
 
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)*/
-		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant)
-
-		defer apiclientconexionbd.CerrarDB(db)
+		defer conexionBD.CerrarDB(db)
 
 		if len(idsEliminar.Ids) > 0 {
 			for i := 0; i < len(idsEliminar.Ids); i++ {
