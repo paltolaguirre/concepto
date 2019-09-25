@@ -10,15 +10,15 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/xubiosueldos/conexionBD/apiclientconexionbd"
+	"github.com/xubiosueldos/conexionBD"
 	"github.com/xubiosueldos/framework/configuracion"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/xubiosueldos/autenticacion/apiclientautenticacion"
-	"github.com/xubiosueldos/autenticacion/publico"
-	"github.com/xubiosueldos/concepto/structConcepto"
+	"github.com/xubiosueldos/conexionBD/Autenticacion/structAutenticacion"
+	"github.com/xubiosueldos/conexionBD/Concepto/structConcepto"
 	"github.com/xubiosueldos/framework"
 )
 
@@ -65,7 +65,7 @@ func Healthy(writer http.ResponseWriter, request *http.Request) {
 	writer.Write([]byte("Healthy"))
 }
 
-func (s *requestMono) requestMonolitico(options string, w http.ResponseWriter, r *http.Request, concepto_data structConcepto.Concepto, tokenAutenticacion *publico.Security, codigo string) *requestMono {
+func (s *requestMono) requestMonolitico(options string, w http.ResponseWriter, r *http.Request, concepto_data structConcepto.Concepto, tokenAutenticacion *structAutenticacion.Security, codigo string) *requestMono {
 
 	//configuracion := configuracion.GetInstance()
 
@@ -127,12 +127,10 @@ func ConceptoList(w http.ResponseWriter, r *http.Request) {
 	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
 	if tokenValido {
 
-		versionMicroservicio := obtenerVersionConcepto()
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
+		db := conexionBD.ObtenerDB(tenant)
 
-		//defer db.Close()
-		defer apiclientconexionbd.CerrarDB(db)
+		defer conexionBD.CerrarDB(db)
 
 		var conceptos []structConcepto.Concepto
 
@@ -162,13 +160,9 @@ func ConceptoShow(w http.ResponseWriter, r *http.Request) {
 		framework.CheckParametroVacio(p_conceptoid, w)
 		var concepto structConcepto.Concepto //Con &var --> lo que devuelve el metodo se le asigna a la var
 
-		versionMicroservicio := obtenerVersionConcepto()
-
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
-
-		//defer db.Close()
-		defer apiclientconexionbd.CerrarDB(db)
+		db := conexionBD.ObtenerDB(tenant)
+		defer conexionBD.CerrarDB(db)
 
 		//gorm:auto_preload se usa para que complete todos los struct con su informacion
 		if err := db.Set("gorm:auto_preload", true).First(&concepto, "id = ?", concepto_id).Error; gorm.IsRecordNotFoundError(err) {
@@ -197,13 +191,9 @@ func ConceptoAdd(w http.ResponseWriter, r *http.Request) {
 
 		defer r.Body.Close()
 
-		versionMicroservicio := obtenerVersionConcepto()
-
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
-
-		//defer db.Close()
-		defer apiclientconexionbd.CerrarDB(db)
+		db := conexionBD.ObtenerDB(tenant)
+		defer conexionBD.CerrarDB(db)
 
 		var requestMono requestMono
 
@@ -258,13 +248,9 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 
 			concepto_data.ID = p_conpcetoid
 
-			versionMicroservicio := obtenerVersionConcepto()
-
 			tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-			db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
-
-			//defer db.Close()
-			defer apiclientconexionbd.CerrarDB(db)
+			db := conexionBD.ObtenerDB(tenant)
+			defer conexionBD.CerrarDB(db)
 
 			//abro una transacción para que si hay un error no persista en la DB
 			tx := db.Begin()
@@ -300,13 +286,9 @@ func ConceptoRemove(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(err)
 		}
 
-		versionMicroservicio := obtenerVersionConcepto()
-
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
-
-		//defer db.Close()
-		defer apiclientconexionbd.CerrarDB(db)
+		db := conexionBD.ObtenerDB(tenant)
+		defer conexionBD.CerrarDB(db)
 		/*
 			var conceptos structConcepto.Concepto //Con &var --> lo que devuelve el metodo se le asigna a la var
 
@@ -349,12 +331,10 @@ func ConceptosRemoveMasivo(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		versionMicroservicio := obtenerVersionConcepto()
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+		db := conexionBD.ObtenerDB(tenant)
 
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
-
-		defer apiclientconexionbd.CerrarDB(db)
+		defer conexionBD.CerrarDB(db)
 
 		if len(idsEliminar.Ids) > 0 {
 			for i := 0; i < len(idsEliminar.Ids); i++ {
@@ -372,36 +352,6 @@ func ConceptosRemoveMasivo(w http.ResponseWriter, r *http.Request) {
 		}
 
 		framework.RespondJSON(w, http.StatusOK, resultadoDeEliminacion)
-	}
-
-}
-
-func AutomigrateTablasPrivadas(db *gorm.DB) {
-
-	//para actualizar tablas...agrega columnas e indices, pero no elimina
-	db.AutoMigrate(&structConcepto.Concepto{})
-
-	obtenerConceptosPublicos(db)
-}
-
-func obtenerVersionConcepto() int {
-	configuracion := configuracion.GetInstance()
-
-	return configuracion.Versionconcepto
-}
-
-func obtenerConceptosPublicos(db *gorm.DB) {
-	var w http.ResponseWriter
-	var conceptos []structConcepto.Concepto
-	db_public := apiclientconexionbd.ObtenerDB("public", "", 0, AutomigrateTablasPrivadas)
-
-	db_public.Find(&conceptos)
-	for i := 0; i < len(conceptos); i++ {
-		concepto := conceptos[i]
-		if err := db.Save(&concepto).Error; err != nil {
-			framework.RespondError(w, http.StatusInternalServerError, err.Error())
-			return
-		}
 	}
 
 }
