@@ -1,54 +1,21 @@
 package main
 
 import (
-	"bytes"
-	"crypto/tls"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 
 	"github.com/xubiosueldos/conexionBD"
-	"github.com/xubiosueldos/framework/configuracion"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/xubiosueldos/autenticacion/apiclientautenticacion"
-	"github.com/xubiosueldos/conexionBD/Autenticacion/structAutenticacion"
 	"github.com/xubiosueldos/conexionBD/Concepto/structConcepto"
 	"github.com/xubiosueldos/framework"
+	"github.com/xubiosueldos/monoliticComunication"
 )
-
-type strhelper struct {
-	//	gorm.Model
-	ID          string `json:"id"`
-	Nombre      string `json:"nombre"`
-	Codigo      string `json:"codigo"`
-	Descripcion string `json:"descripcion"`
-	//	Activo      int    `json:"activo"`
-}
-
-type strResponse struct {
-	//	gorm.Model
-	Exists string `json:"exists"`
-}
-
-type strHlprServlet struct {
-	//	gorm.Model
-	Username       string `json:"username"`
-	Tenant         string `json:"tenant"`
-	Token          string `json:"token"`
-	Options        string `json:"options"`
-	CuentaContable int    `json:"cuentacontable"`
-}
-
-type requestMono struct {
-	Value interface{}
-	Error error
-}
 
 type IdsAEliminar struct {
 	Ids []int `json:"ids"`
@@ -63,63 +30,6 @@ var nombreMicroservicio string = "concepto"
 // Sirve para controlar si el server esta OK
 func Healthy(writer http.ResponseWriter, request *http.Request) {
 	writer.Write([]byte("Healthy"))
-}
-
-func (s *requestMono) requestMonolitico(options string, w http.ResponseWriter, r *http.Request, concepto_data structConcepto.Concepto, tokenAutenticacion *structAutenticacion.Security, codigo string) *requestMono {
-
-	//configuracion := configuracion.GetInstance()
-
-	var strHlprSrv strHlprServlet
-	token := *tokenAutenticacion
-
-	strHlprSrv.Options = options
-	strHlprSrv.Tenant = token.Tenant
-	strHlprSrv.Token = token.Token
-	strHlprSrv.Username = token.Username
-	strHlprSrv.CuentaContable = *concepto_data.CuentaContable
-	pagesJson, err := json.Marshal(strHlprSrv)
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-
-	url := configuracion.GetUrlMonolitico() + codigo + "GoServlet"
-
-	fmt.Println("URL:>", url)
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(pagesJson))
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println("Error: ", err)
-	}
-	defer resp.Body.Close()
-
-	fmt.Println("response Status:", resp.Status)
-	fmt.Println("response Headers:", resp.Header)
-
-	body, err := ioutil.ReadAll(resp.Body)
-
-	if err != nil {
-		fmt.Println("Error: ", err)
-	}
-
-	str := string(body)
-	fmt.Println("BYTES RECIBIDOS :", len(str))
-	/*
-		fixUtf := func(r rune) rune {
-			if r == utf8.RuneError {
-				return -1
-			}
-			return r
-		}
-
-			var dataStruct []strResponse
-			json.Unmarshal([]byte(strings.Map(fixUtf, s)), &dataStruct)*/
-
-	if str == "0" {
-		framework.RespondError(w, http.StatusNotFound, "Cuenta Inexistente")
-		s.Error = errors.New("Cuenta Inexistente")
-	}
-	return s
 }
 
 func ConceptoList(w http.ResponseWriter, r *http.Request) {
@@ -170,6 +80,12 @@ func ConceptoShow(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		cuentaID := concepto.CuentaContable
+		if cuentaID != nil {
+			cuenta := monoliticComunication.Obtenercuenta(w, r, tokenAutenticacion, strconv.Itoa(*cuentaID))
+			concepto.Cuentacontable = cuenta
+		}
+
 		framework.RespondJSON(w, http.StatusOK, concepto)
 	}
 
@@ -195,9 +111,7 @@ func ConceptoAdd(w http.ResponseWriter, r *http.Request) {
 		db := conexionBD.ObtenerDB(tenant)
 		defer conexionBD.CerrarDB(db)
 
-		var requestMono requestMono
-
-		if err := requestMono.requestMonolitico("CANQUERY", w, r, concepto_data, tokenAutenticacion, "cuenta").Error; err != nil {
+		if err := monoliticComunication.Checkexistecuenta(w, r, tokenAutenticacion, strconv.Itoa(*concepto_data.CuentaContable)).Error; err != nil {
 			framework.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
@@ -237,9 +151,7 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 
 		conpcetoid := concepto_data.ID
 
-		var requestMono requestMono
-
-		if err := requestMono.requestMonolitico("CANQUERY", w, r, concepto_data, tokenAutenticacion, "cuenta").Error; err != nil {
+		if err := monoliticComunication.Checkexistecuenta(w, r, tokenAutenticacion, strconv.Itoa(*concepto_data.CuentaContable)).Error; err != nil {
 			framework.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
