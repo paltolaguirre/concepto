@@ -116,8 +116,15 @@ func ConceptoAdd(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if err := db.Create(&concepto_data).Error; err != nil {
-			framework.RespondError(w, http.StatusInternalServerError, err.Error())
+		if concepto_data.Porcentaje != nil && concepto_data.Tipodecalculoid != nil || concepto_data.Porcentaje == nil && concepto_data.Tipodecalculoid == nil {
+
+			if err := db.Create(&concepto_data).Error; err != nil {
+				framework.RespondError(w, http.StatusInternalServerError, err.Error())
+				return
+			}
+
+		} else {
+			framework.RespondError(w, http.StatusInternalServerError, "Debe completar el Porcentaje o el Cálculo entre Conceptos")
 			return
 		}
 
@@ -164,19 +171,27 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 			db := conexionBD.ObtenerDB(tenant)
 			defer conexionBD.CerrarDB(db)
 
-			//abro una transacción para que si hay un error no persista en la DB
-			tx := db.Begin()
+			if concepto_data.Porcentaje != nil && concepto_data.Tipodecalculoid != nil || concepto_data.Porcentaje == nil && concepto_data.Tipodecalculoid == nil {
 
-			//modifico el concepto de acuerdo a lo enviado en el json
-			if err := tx.Save(&concepto_data).Error; err != nil {
-				tx.Rollback()
-				framework.RespondError(w, http.StatusInternalServerError, err.Error())
+				//abro una transacción para que si hay un error no persista en la DB
+				tx := db.Begin()
+
+				//modifico el concepto de acuerdo a lo enviado en el json
+				if err := tx.Save(&concepto_data).Error; err != nil {
+					tx.Rollback()
+					framework.RespondError(w, http.StatusInternalServerError, err.Error())
+					return
+				}
+
+				tx.Commit()
+
+				framework.RespondJSON(w, http.StatusOK, concepto_data)
+
+			} else {
+				framework.RespondError(w, http.StatusInternalServerError, "Debe completar el Porcentaje o el Cálculo entre Conceptos")
 				return
+
 			}
-
-			tx.Commit()
-
-			framework.RespondJSON(w, http.StatusOK, concepto_data)
 
 		} else {
 			framework.RespondError(w, http.StatusNotFound, framework.IdParametroDistintoStruct)
