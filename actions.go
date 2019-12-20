@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/xubiosueldos/conexionBD"
 
@@ -19,6 +20,9 @@ import (
 
 type IdsAEliminar struct {
 	Ids []int `json:"ids"`
+}
+type aplicaImpuestoGanancias struct {
+	Aplicaimpuestosganancias bool `json:"aplicaimpuestosganancias"`
 }
 
 /*
@@ -129,6 +133,7 @@ func ConceptoAdd(w http.ResponseWriter, r *http.Request) {
 		}
 
 		framework.RespondJSON(w, http.StatusCreated, concepto_data)
+
 	}
 }
 
@@ -281,4 +286,30 @@ func ConceptosRemoveMasivo(w http.ResponseWriter, r *http.Request) {
 		framework.RespondJSON(w, http.StatusOK, resultadoDeEliminacion)
 	}
 
+}
+
+func canInsertUpdate(w http.ResponseWriter, concepto structConcepto.Concepto, db *gorm.DB) bool {
+
+	var aplicaimpuestoganancias bool
+	var tipoConcepto structConcepto.Tipoconcepto
+
+	sql := "SELECT CODIGO FROM TipoConcepto WHERE ID = " + strconv.Itoa(*concepto.Tipoconceptoid)
+	db.Set("gorm:auto_preload", true).Raw(sql).Scan(&tipoConcepto)
+
+	sql = "SELECT APLICA" + strings.ReplaceAll(tipoConcepto.Codigo, "_", "") + " FROM TIPOIMPUESTOGANANCIAS WHERE ID = " + strconv.Itoa(*concepto.Tipoimpuestogananciasid)
+
+	db.Set("gorm:auto_preload", true).Raw(sql).Scan(&aplicaimpuestoganancias)
+
+	if aplicaImpuestoGanancias == true {
+		if *concepto.Tipoconceptoid == -4 && concepto.Tipoimpuestogananciasid != nil {
+			if concepto.Prorrateo == true && concepto.Basesac == true {
+				framework.RespondError(w, http.StatusInternalServerError, "No se puede seleccionar Prorrateo y Base Sac porque el Concepto es de tipo Retencion")
+				return false
+
+			}
+		}
+	} else {
+
+	}
+	return true
 }
