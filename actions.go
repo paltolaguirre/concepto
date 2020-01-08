@@ -114,26 +114,26 @@ func ConceptoAdd(w http.ResponseWriter, r *http.Request) {
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 		db := conexionBD.ObtenerDB(tenant)
 		defer conexionBD.CerrarDB(db)
-
-		if err := monoliticComunication.Checkexistecuenta(w, r, tokenAutenticacion, strconv.Itoa(*concepto_data.CuentaContable)).Error; err != nil {
-			framework.RespondError(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		if concepto_data.Porcentaje != nil && concepto_data.Tipodecalculoid != nil || concepto_data.Porcentaje == nil && concepto_data.Tipodecalculoid == nil {
-
-			if err := db.Create(&concepto_data).Error; err != nil {
+		if canInsertUpdate(w, concepto_data, db) == true {
+			if err := monoliticComunication.Checkexistecuenta(w, r, tokenAutenticacion, strconv.Itoa(*concepto_data.CuentaContable)).Error; err != nil {
 				framework.RespondError(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 
-		} else {
-			framework.RespondError(w, http.StatusInternalServerError, "Debe completar el Porcentaje o el Cálculo entre Conceptos")
-			return
+			if concepto_data.Porcentaje != nil && concepto_data.Tipodecalculoid != nil || concepto_data.Porcentaje == nil && concepto_data.Tipodecalculoid == nil {
+
+				if err := db.Create(&concepto_data).Error; err != nil {
+					framework.RespondError(w, http.StatusInternalServerError, err.Error())
+					return
+				}
+
+			} else {
+				framework.RespondError(w, http.StatusInternalServerError, "Debe completar el Porcentaje o el Cálculo entre Conceptos")
+				return
+			}
+
+			framework.RespondJSON(w, http.StatusCreated, concepto_data)
 		}
-
-		framework.RespondJSON(w, http.StatusCreated, concepto_data)
-
 	}
 }
 
@@ -288,28 +288,36 @@ func ConceptosRemoveMasivo(w http.ResponseWriter, r *http.Request) {
 
 }
 
+type prueba struct {
+	aplica bool
+}
+
 func canInsertUpdate(w http.ResponseWriter, concepto structConcepto.Concepto, db *gorm.DB) bool {
+	if concepto.Tipoimpuestogananciasid != nil {
+		var aplicaimpuestoganancias prueba
+		var tipoConcepto structConcepto.Tipoconcepto
 
-	var aplicaimpuestoganancias bool
-	var tipoConcepto structConcepto.Tipoconcepto
+		sql := "SELECT CODIGO FROM TipoConcepto WHERE ID = " + strconv.Itoa(*concepto.Tipoconceptoid)
+		db.Set("gorm:auto_preload", true).Raw(sql).Scan(&tipoConcepto)
 
-	sql := "SELECT CODIGO FROM TipoConcepto WHERE ID = " + strconv.Itoa(*concepto.Tipoconceptoid)
-	db.Set("gorm:auto_preload", true).Raw(sql).Scan(&tipoConcepto)
+		/*aplicaTipoConcepto := "APLICA" + strings.ReplaceAll(tipoConcepto.Codigo, "_", "")
 
-	sql = "SELECT APLICA" + strings.ReplaceAll(tipoConcepto.Codigo, "_", "") + " FROM TIPOIMPUESTOGANANCIAS WHERE ID = " + strconv.Itoa(*concepto.Tipoimpuestogananciasid)
+		db.Table("TIPOIMPUESTOGANANCIAS").Select(aplicaTipoConcepto).Find(&aplicaimpuestoganancias)*/
+		sql = "SELECT APLICA" + strings.ReplaceAll(tipoConcepto.Codigo, "_", "") + " AS APLICA FROM TIPOIMPUESTOGANANCIAS WHERE ID = " + strconv.Itoa(*concepto.Tipoimpuestogananciasid)
+		fmt.Println(sql)
+		db.Raw(sql).Scan(&aplicaimpuestoganancias)
 
-	db.Set("gorm:auto_preload", true).Raw(sql).Scan(&aplicaimpuestoganancias)
+		if aplicaimpuestoganancias.aplica == true {
+			if *concepto.Tipoconceptoid == -4 {
+				if concepto.Prorrateo == true && concepto.Basesac == true {
+					framework.RespondError(w, http.StatusInternalServerError, "No se puede seleccionar Prorrateo y Base Sac porque el Concepto es de tipo Retencion")
+					return false
 
-	if aplicaImpuestoGanancias == true {
-		if *concepto.Tipoconceptoid == -4 && concepto.Tipoimpuestogananciasid != nil {
-			if concepto.Prorrateo == true && concepto.Basesac == true {
-				framework.RespondError(w, http.StatusInternalServerError, "No se puede seleccionar Prorrateo y Base Sac porque el Concepto es de tipo Retencion")
-				return false
-
+				}
 			}
-		}
-	} else {
+		} else {
 
+		}
 	}
 	return true
 }
