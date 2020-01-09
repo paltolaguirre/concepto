@@ -21,9 +21,6 @@ import (
 type IdsAEliminar struct {
 	Ids []int `json:"ids"`
 }
-type aplicaImpuestoGanancias struct {
-	Aplicaimpuestosganancias bool `json:"aplicaimpuestosganancias"`
-}
 
 /*
 func (strhelper) TableName() string {
@@ -163,44 +160,46 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 
 		conpcetoid := concepto_data.ID
 
-		if err := monoliticComunication.Checkexistecuenta(w, r, tokenAutenticacion, strconv.Itoa(*concepto_data.CuentaContable)).Error; err != nil {
-			framework.RespondError(w, http.StatusInternalServerError, err.Error())
-			return
-		}
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+		db := conexionBD.ObtenerDB(tenant)
+		defer conexionBD.CerrarDB(db)
 
-		if p_conpcetoid == conpcetoid || conpcetoid == 0 {
-
-			concepto_data.ID = p_conpcetoid
-
-			tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-			db := conexionBD.ObtenerDB(tenant)
-			defer conexionBD.CerrarDB(db)
-
-			if concepto_data.Porcentaje != nil && concepto_data.Tipodecalculoid != nil || concepto_data.Porcentaje == nil && concepto_data.Tipodecalculoid == nil {
-
-				//abro una transacción para que si hay un error no persista en la DB
-				tx := db.Begin()
-
-				//modifico el concepto de acuerdo a lo enviado en el json
-				if err := tx.Save(&concepto_data).Error; err != nil {
-					tx.Rollback()
-					framework.RespondError(w, http.StatusInternalServerError, err.Error())
-					return
-				}
-
-				tx.Commit()
-
-				framework.RespondJSON(w, http.StatusOK, concepto_data)
-
-			} else {
-				framework.RespondError(w, http.StatusInternalServerError, "Debe completar el Porcentaje o el Cálculo entre Conceptos")
+		if canInsertUpdate(w, concepto_data, db) == true {
+			if err := monoliticComunication.Checkexistecuenta(w, r, tokenAutenticacion, strconv.Itoa(*concepto_data.CuentaContable)).Error; err != nil {
+				framework.RespondError(w, http.StatusInternalServerError, err.Error())
 				return
-
 			}
 
-		} else {
-			framework.RespondError(w, http.StatusNotFound, framework.IdParametroDistintoStruct)
-			return
+			if p_conpcetoid == conpcetoid || conpcetoid == 0 {
+
+				concepto_data.ID = p_conpcetoid
+
+				if concepto_data.Porcentaje != nil && concepto_data.Tipodecalculoid != nil || concepto_data.Porcentaje == nil && concepto_data.Tipodecalculoid == nil {
+
+					//abro una transacción para que si hay un error no persista en la DB
+					tx := db.Begin()
+
+					//modifico el concepto de acuerdo a lo enviado en el json
+					if err := tx.Save(&concepto_data).Error; err != nil {
+						tx.Rollback()
+						framework.RespondError(w, http.StatusInternalServerError, err.Error())
+						return
+					}
+
+					tx.Commit()
+
+					framework.RespondJSON(w, http.StatusOK, concepto_data)
+
+				} else {
+					framework.RespondError(w, http.StatusInternalServerError, "Debe completar el Porcentaje o el Cálculo entre Conceptos")
+					return
+
+				}
+
+			} else {
+				framework.RespondError(w, http.StatusNotFound, framework.IdParametroDistintoStruct)
+				return
+			}
 		}
 	}
 
@@ -288,36 +287,31 @@ func ConceptosRemoveMasivo(w http.ResponseWriter, r *http.Request) {
 
 }
 
-type prueba struct {
-	aplica bool
-}
-
 func canInsertUpdate(w http.ResponseWriter, concepto structConcepto.Concepto, db *gorm.DB) bool {
+	var aplicaimpuestoganancias bool = false
+	var tipoConcepto structConcepto.Tipoconcepto
+
 	if concepto.Tipoimpuestogananciasid != nil {
-		var aplicaimpuestoganancias prueba
-		var tipoConcepto structConcepto.Tipoconcepto
 
 		sql := "SELECT CODIGO FROM TipoConcepto WHERE ID = " + strconv.Itoa(*concepto.Tipoconceptoid)
 		db.Set("gorm:auto_preload", true).Raw(sql).Scan(&tipoConcepto)
 
-		/*aplicaTipoConcepto := "APLICA" + strings.ReplaceAll(tipoConcepto.Codigo, "_", "")
+		sql = "SELECT APLICA" + strings.ReplaceAll(tipoConcepto.Codigo, "_", "") + " FROM TIPOIMPUESTOGANANCIAS WHERE ID = " + strconv.Itoa(*concepto.Tipoimpuestogananciasid)
 
-		db.Table("TIPOIMPUESTOGANANCIAS").Select(aplicaTipoConcepto).Find(&aplicaimpuestoganancias)*/
-		sql = "SELECT APLICA" + strings.ReplaceAll(tipoConcepto.Codigo, "_", "") + " AS APLICA FROM TIPOIMPUESTOGANANCIAS WHERE ID = " + strconv.Itoa(*concepto.Tipoimpuestogananciasid)
-		fmt.Println(sql)
-		db.Raw(sql).Scan(&aplicaimpuestoganancias)
+		db.Raw(sql).Row().Scan(&aplicaimpuestoganancias)
 
-		if aplicaimpuestoganancias.aplica == true {
+		if aplicaimpuestoganancias == true {
 			if *concepto.Tipoconceptoid == -4 {
 				if concepto.Prorrateo == true && concepto.Basesac == true {
 					framework.RespondError(w, http.StatusInternalServerError, "No se puede seleccionar Prorrateo y Base Sac porque el Concepto es de tipo Retencion")
-					return false
+					return aplicaimpuestoganancias
 
 				}
 			}
 		} else {
-
+			framework.RespondError(w, http.StatusInternalServerError, "El tipo de Impuesto a las Ganancias no aplica para el tipo de Concepto")
+			return aplicaimpuestoganancias
 		}
 	}
-	return true
+	return aplicaimpuestoganancias
 }
