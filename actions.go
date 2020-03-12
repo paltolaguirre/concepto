@@ -116,15 +116,29 @@ func ConceptoAdd(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if concepto_data.Porcentaje != nil && concepto_data.Tipodecalculoid != nil || concepto_data.Porcentaje == nil && concepto_data.Tipodecalculoid == nil {
+		if concepto_data.Tipocalculoautomatico.Codigo != "PORCENTAJE" {
+			concepto_data.Porcentaje = nil
+			concepto_data.Tipodecalculo = nil
+			concepto_data.Tipodecalculoid = nil
+		}
 
-			if err := db.Create(&concepto_data).Error; err != nil {
-				framework.RespondError(w, http.StatusInternalServerError, err.Error())
-				return
-			}
+		if concepto_data.Tipocalculoautomatico.Codigo != "FORMULA" {
+			concepto_data.Formula = nil
+			concepto_data.Formulanombre = nil
+		}
 
-		} else {
+		if concepto_data.Tipocalculoautomatico.Codigo == "PORCENTAJE"  && (concepto_data.Porcentaje == nil || concepto_data.Tipodecalculoid == nil) {
 			framework.RespondError(w, http.StatusInternalServerError, "Debe completar el Porcentaje o el Cálculo entre Conceptos")
+			return
+		}
+
+		if concepto_data.Tipocalculoautomatico.Codigo == "FORMULA"  && (concepto_data.Formula == nil || concepto_data.Formulanombre == nil) {
+			framework.RespondError(w, http.StatusInternalServerError, "Debe seleccionar una formula")
+			return
+		}
+
+		if err := db.Create(&concepto_data).Error; err != nil {
+			framework.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -171,27 +185,40 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 			db := conexionBD.ObtenerDB(tenant)
 			defer conexionBD.CerrarDB(db)
 
-			if concepto_data.Porcentaje != nil && concepto_data.Tipodecalculoid != nil || concepto_data.Porcentaje == nil && concepto_data.Tipodecalculoid == nil {
+			if concepto_data.Tipocalculoautomatico.Codigo != "PORCENTAJE" {
+				concepto_data.Porcentaje = nil
+				concepto_data.Tipodecalculo = nil
+				concepto_data.Tipodecalculoid = nil
+			}
 
-				//abro una transacción para que si hay un error no persista en la DB
-				tx := db.Begin()
+			if concepto_data.Tipocalculoautomatico.Codigo != "FORMULA" {
+				concepto_data.Formula = nil
+				concepto_data.Formulanombre = nil
+			}
 
-				//modifico el concepto de acuerdo a lo enviado en el json
-				if err := tx.Save(&concepto_data).Error; err != nil {
-					tx.Rollback()
-					framework.RespondError(w, http.StatusInternalServerError, err.Error())
-					return
-				}
-
-				tx.Commit()
-
-				framework.RespondJSON(w, http.StatusOK, concepto_data)
-
-			} else {
+			if concepto_data.Tipocalculoautomatico.Codigo == "PORCENTAJE"  && (concepto_data.Porcentaje == nil || concepto_data.Tipodecalculoid == nil) {
 				framework.RespondError(w, http.StatusInternalServerError, "Debe completar el Porcentaje o el Cálculo entre Conceptos")
 				return
-
 			}
+
+			if concepto_data.Tipocalculoautomatico.Codigo == "FORMULA"  && (concepto_data.Formula == nil || concepto_data.Formulanombre == nil) {
+				framework.RespondError(w, http.StatusInternalServerError, "Debe seleccionar una formula")
+				return
+			}
+
+			//abro una transacción para que si hay un error no persista en la DB
+			tx := db.Begin()
+
+			//modifico el concepto de acuerdo a lo enviado en el json
+			if err := tx.Save(&concepto_data).Error; err != nil {
+				tx.Rollback()
+				framework.RespondError(w, http.StatusInternalServerError, err.Error())
+				return
+			}
+
+			tx.Commit()
+
+			framework.RespondJSON(w, http.StatusOK, concepto_data)
 
 		} else {
 			framework.RespondError(w, http.StatusNotFound, framework.IdParametroDistintoStruct)
