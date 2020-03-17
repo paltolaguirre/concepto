@@ -137,7 +137,7 @@ func ConceptoAdd(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if concepto_data.Tipocalculoautomatico.Codigo == "FORMULA"  && (concepto_data.Formula == nil || concepto_data.Formulanombre == nil) {
+		if concepto_data.Tipocalculoautomatico.Codigo == "FORMULA"  && concepto_data.Formulanombre == nil {
 			framework.RespondError(w, http.StatusInternalServerError, "Debe seleccionar una formula")
 			return
 		}
