@@ -127,6 +127,11 @@ func ConceptoAdd(w http.ResponseWriter, r *http.Request) {
 			concepto_data.Formulanombre = nil
 		}
 
+		concepto_data.Eseditable = true
+		if concepto_data.Tipocalculoautomatico.Codigo != "NO_APLICA" {
+			concepto_data.Eseditable = false
+		}
+
 		if concepto_data.Tipocalculoautomatico.Codigo == "PORCENTAJE"  && (concepto_data.Porcentaje == nil || concepto_data.Tipodecalculoid == nil) {
 			framework.RespondError(w, http.StatusInternalServerError, "Debe completar el Porcentaje o el Cálculo entre Conceptos")
 			return
@@ -194,6 +199,11 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 			if concepto_data.Tipocalculoautomatico.Codigo != "FORMULA" {
 				concepto_data.Formula = nil
 				concepto_data.Formulanombre = nil
+			}
+
+			concepto_data.Eseditable = true
+			if concepto_data.Tipocalculoautomatico.Codigo != "NO_APLICA" {
+				concepto_data.Eseditable = false
 			}
 
 			if concepto_data.Tipocalculoautomatico.Codigo == "PORCENTAJE"  && (concepto_data.Porcentaje == nil || concepto_data.Tipodecalculoid == nil) {
