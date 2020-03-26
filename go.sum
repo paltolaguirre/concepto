@@ -80,11 +80,15 @@ github.com/stretchr/objx v0.1.1/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/xubiosueldos/autenticacion v0.0.0-20200316185146-33c00f8b4203 h1:sivKgsGPifnZiwtNoOVktVZvVtoUoIEL7tb9s7Npotw=
 github.com/xubiosueldos/autenticacion v0.0.0-20200316185146-33c00f8b4203/go.mod h1:cybESPevNX0KWulVkmlALEpxKfLY0Naq9HNRTtBXBNM=
+github.com/xubiosueldos/autenticacion v0.0.0-20200326142225-5fe9a7ae2ca9 h1:17VDKZplvbBqZNzP9vfile6bjzzYiNhbuLfk9xmjbQ4=
+github.com/xubiosueldos/autenticacion v0.0.0-20200326142225-5fe9a7ae2ca9/go.mod h1:e46ISXEfh1OsfbgWHj6iWgECs3pbziTBV1fRA72IB4M=
 github.com/xubiosueldos/conexionBD v0.0.0-20190923132716-4e09b2219e84 h1:hh5eKKvHXvVp18cebfdyROdsbFhYxNajSDzO2MVTY0c=
 github.com/xubiosueldos/conexionBD v0.0.0-20190923132716-4e09b2219e84/go.mod h1:UU8Kkj74xg8kM7bVuVJx5ZFxPKho38yVlo78dVMFkMY=
 github.com/xubiosueldos/conexionBD v0.0.0-20191024181127-549b18628f2c/go.mod h1:jeo57E+wvI5Q21kKt/DhqL0fWzFNOuU5xlsmtO504zg=
 github.com/xubiosueldos/conexionBD v0.0.0-20200316184710-ecb14b9c2d37 h1:6ozOaVrjX9pyiPOsoxmPq+l963TycvYwUO5Kkhw2ptM=
 github.com/xubiosueldos/conexionBD v0.0.0-20200316184710-ecb14b9c2d37/go.mod h1:HMSOQVG2yGtw7o43PspUrFkitZsTDdgJU7TGjwmeO6c=
+github.com/xubiosueldos/conexionBD v0.0.0-20200326141853-bfc1e32f238f h1:EkLrBjFT3AjvUEvvPXB9BqR3kuSK/xyrpOs2F71IAGQ=
+github.com/xubiosueldos/conexionBD v0.0.0-20200326141853-bfc1e32f238f/go.mod h1:HMSOQVG2yGtw7o43PspUrFkitZsTDdgJU7TGjwmeO6c=
 github.com/xubiosueldos/framework v0.0.0-20190923130327-27a81bc804ce h1:5Lxe2+4CzL0HJVJKfuvxS521sLFVi5h6EYCwDoHZOCs=
 github.com/xubiosueldos/framework v0.0.0-20190923130327-27a81bc804ce/go.mod h1:Atdymo+Iri+Mn8+VPhqIyb6dW/S/q3xPgobPRPBirzs=
 github.com/xubiosueldos/framework v0.0.0-20191002111857-52b12ef56c62 h1:39700bnGzWF139TDjBPFLMICs+1Tk306RVSjp1KCkEw=
