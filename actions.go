@@ -218,10 +218,10 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 
 			//abro una transacción para que si hay un error no persista en la DB
 			tx := db.Begin()
+			defer tx.Rollback()
 
 			//modifico el concepto de acuerdo a lo enviado en el json
 			if err := tx.Save(&concepto_data).Error; err != nil {
-				tx.Rollback()
 				framework.RespondError(w, http.StatusInternalServerError, err.Error())
 				return
 			}
