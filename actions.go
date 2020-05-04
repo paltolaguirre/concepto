@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"github.com/xubiosueldos/autenticacion-sdk"
+	"github.com/xubiosueldos/autenticacion/apiclientautenticacion"
 	"github.com/xubiosueldos/conexionBD/Concepto/structConcepto"
 	"github.com/xubiosueldos/framework"
 	"github.com/xubiosueldos/monoliticComunication"
@@ -34,10 +34,10 @@ func Healthy(writer http.ResponseWriter, request *http.Request) {
 
 func ConceptoList(w http.ResponseWriter, r *http.Request) {
 
-	tokenValido, tokenAutenticacion := autenticacionapiclient.CheckTokenValido(w, r)
+	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
 	if tokenValido {
 
-		tenant := autenticacionapiclient.ObtenerTenant(tokenAutenticacion)
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 		db := conexionBD.ObtenerDB(tenant)
 
 		defer conexionBD.CerrarDB(db)
@@ -58,7 +58,7 @@ func ConceptoList(w http.ResponseWriter, r *http.Request) {
 
 func ConceptoShow(w http.ResponseWriter, r *http.Request) {
 
-	tokenValido, tokenAutenticacion := autenticacionapiclient.CheckTokenValido(w, r)
+	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
 	if tokenValido {
 
 		params := mux.Vars(r)
@@ -70,7 +70,7 @@ func ConceptoShow(w http.ResponseWriter, r *http.Request) {
 		framework.CheckParametroVacio(p_conceptoid, w)
 		var concepto structConcepto.Concepto //Con &var --> lo que devuelve el metodo se le asigna a la var
 
-		tenant := autenticacionapiclient.ObtenerTenant(tokenAutenticacion)
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 		db := conexionBD.ObtenerDB(tenant)
 		defer conexionBD.CerrarDB(db)
 
@@ -93,7 +93,7 @@ func ConceptoShow(w http.ResponseWriter, r *http.Request) {
 
 func ConceptoAdd(w http.ResponseWriter, r *http.Request) {
 
-	tokenValido, tokenAutenticacion := autenticacionapiclient.CheckTokenValido(w, r)
+	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
 	if tokenValido {
 
 		decoder := json.NewDecoder(r.Body)
@@ -107,7 +107,7 @@ func ConceptoAdd(w http.ResponseWriter, r *http.Request) {
 
 		defer r.Body.Close()
 
-		tenant := autenticacionapiclient.ObtenerTenant(tokenAutenticacion)
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 		db := conexionBD.ObtenerDB(tenant)
 		defer conexionBD.CerrarDB(db)
 
@@ -153,7 +153,7 @@ func ConceptoAdd(w http.ResponseWriter, r *http.Request) {
 
 func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 
-	tokenValido, tokenAutenticacion := autenticacionapiclient.CheckTokenValido(w, r)
+	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
 	if tokenValido {
 
 		params := mux.Vars(r)
@@ -186,7 +186,7 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 
 			concepto_data.ID = p_conpcetoid
 
-			tenant := autenticacionapiclient.ObtenerTenant(tokenAutenticacion)
+			tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 			db := conexionBD.ObtenerDB(tenant)
 			defer conexionBD.CerrarDB(db)
 
@@ -240,7 +240,7 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 
 func ConceptoRemove(w http.ResponseWriter, r *http.Request) {
 
-	tokenValido, tokenAutenticacion := autenticacionapiclient.CheckTokenValido(w, r)
+	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
 	if tokenValido {
 
 		//Para obtener los parametros por la url
@@ -250,7 +250,7 @@ func ConceptoRemove(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(err)
 		}
 
-		tenant := autenticacionapiclient.ObtenerTenant(tokenAutenticacion)
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 		db := conexionBD.ObtenerDB(tenant)
 		defer conexionBD.CerrarDB(db)
 		/*
@@ -284,7 +284,7 @@ func ConceptoRemove(w http.ResponseWriter, r *http.Request) {
 
 func ConceptosRemoveMasivo(w http.ResponseWriter, r *http.Request) {
 	var resultadoDeEliminacion = make(map[int]string)
-	tokenValido, tokenAutenticacion := autenticacionapiclient.CheckTokenValido(w, r)
+	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
 	if tokenValido {
 
 		var idsEliminar IdsAEliminar
@@ -295,7 +295,7 @@ func ConceptosRemoveMasivo(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		tenant := autenticacionapiclient.ObtenerTenant(tokenAutenticacion)
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 		db := conexionBD.ObtenerDB(tenant)
 
 		defer conexionBD.CerrarDB(db)
