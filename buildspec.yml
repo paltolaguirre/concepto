@@ -29,8 +29,6 @@ phases:
       # Building App
       - echo Build App started on `date`
       - export GO111MODULE=on
-      - go version
-      - go get -u
       - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -tags netgo -ldflags '-w' -o main *.go
       # Building Docker image
       - echo Building Docker image...
