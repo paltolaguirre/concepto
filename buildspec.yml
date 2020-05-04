@@ -30,7 +30,7 @@ phases:
       - echo Build App started on `date`
       - git config --global url."https://79f37ea8c1e50a6ceabfa8e5258546d69b3cbc13:x-oauth-basic@github.com/".insteadOf "https://github.com/"
       - export GIT_TERMINAL_PROMPT=1
-        export GOPRIVATE="github.com/xubiosueldos"
+      - export GOPRIVATE="github.com/xubiosueldos"
       - export GO111MODULE=on
       - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -tags netgo -ldflags '-w' -o main *.go
       # Building Docker image
