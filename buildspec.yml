@@ -28,13 +28,7 @@ phases:
       - echo Build started on `date`
       # Building App
       - echo Build App started on `date`
-      - git config --global url."https://xubiosueldos:940586ebf1fa1ee734d8c9a6f06de8cb354ec808@github.com/".insteadOf "https://github.com/"
-      - export GOPROXY=https://proxy.golang.org/
-      - export GIT_TERMINAL_PROMPT=1
-      - export GOPRIVATE="github.com/xubiosueldos"
       - export GO111MODULE=on
-      - go version
-      - go get -u
       - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -tags netgo -ldflags '-w' -o main *.go
       # Building Docker image
       - echo Building Docker image...
