@@ -28,7 +28,7 @@ phases:
       - echo Build started on `date`
       # Building App
       - echo Build App started on `date`
-      - git config --global url."https://79f37ea8c1e50a6ceabfa8e5258546d69b3cbc13:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+      - git config --global url."https://xubiosueldos:platon1401@github.com/".insteadOf "https://github.com/"
       - export GOPROXY=https://proxy.golang.org/
       - export GIT_TERMINAL_PROMPT=1
       - export GOPRIVATE="github.com/xubiosueldos"
