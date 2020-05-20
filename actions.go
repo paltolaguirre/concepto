@@ -132,16 +132,19 @@ func ConceptoAdd(w http.ResponseWriter, r *http.Request) {
 			concepto_data.Eseditable = false
 		}
 
-		if concepto_data.Tipocalculoautomatico.Codigo == "PORCENTAJE"  && (concepto_data.Porcentaje == nil || concepto_data.Tipodecalculoid == nil) {
+		if concepto_data.Tipocalculoautomatico.Codigo == "PORCENTAJE" && (concepto_data.Porcentaje == nil || concepto_data.Tipodecalculoid == nil) {
 			framework.RespondError(w, http.StatusInternalServerError, "Debe completar el Porcentaje o el Cálculo entre Conceptos")
 			return
 		}
 
-		if concepto_data.Tipocalculoautomatico.Codigo == "FORMULA"  && concepto_data.Formulanombre == nil {
+		if concepto_data.Tipocalculoautomatico.Codigo == "FORMULA" && concepto_data.Formulanombre == nil {
 			framework.RespondError(w, http.StatusInternalServerError, "Debe seleccionar una formula")
 			return
 		}
-
+		if concepto_data.Codigointerno != nil {
+			framework.RespondError(w, http.StatusInternalServerError, "El codigo interno no debe ser completado")
+			return
+		}
 		if err := db.Create(&concepto_data).Error; err != nil {
 			framework.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
@@ -206,15 +209,19 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 				concepto_data.Eseditable = false
 			}
 
-			if concepto_data.Tipocalculoautomatico.Codigo == "PORCENTAJE"  && (concepto_data.Porcentaje == nil || concepto_data.Tipodecalculoid == nil) {
+			if concepto_data.Tipocalculoautomatico.Codigo == "PORCENTAJE" && (concepto_data.Porcentaje == nil || concepto_data.Tipodecalculoid == nil) {
 				framework.RespondError(w, http.StatusInternalServerError, "Debe completar el Porcentaje o el Cálculo entre Conceptos")
 				return
 			}
 
-			if concepto_data.Tipocalculoautomatico.Codigo == "FORMULA"  && (concepto_data.Formula == nil || concepto_data.Formulanombre == nil) {
+			if concepto_data.Tipocalculoautomatico.Codigo == "FORMULA" && (concepto_data.Formula == nil || concepto_data.Formulanombre == nil) {
 				framework.RespondError(w, http.StatusInternalServerError, "Debe seleccionar una formula")
 				return
 			}
+			//Reseteo el codigo interno por si fue modificado en el update del concepto
+			var concepto structConcepto.Concepto
+			db.First(&concepto, "id = ?", concepto_data.ID)
+			concepto_data.Codigointerno = concepto.Codigointerno
 
 			//abro una transacción para que si hay un error no persista en la DB
 			tx := db.Begin()
