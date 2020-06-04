@@ -86,6 +86,10 @@ func ConceptoShow(w http.ResponseWriter, r *http.Request) {
 			concepto.Cuentacontable = cuenta
 		}
 
+		if concepto.Cuentacontablepasivoid != nil {
+			concepto.Cuentacontablepasivo = monoliticComunication.Obtenercuenta(w, r, tokenAutenticacion, strconv.Itoa(*concepto.Cuentacontablepasivoid))
+		}
+
 		framework.RespondJSON(w, http.StatusOK, concepto)
 	}
 
@@ -112,6 +116,11 @@ func ConceptoAdd(w http.ResponseWriter, r *http.Request) {
 		defer conexionBD.CerrarDB(db)
 
 		if err := monoliticComunication.Checkexistecuenta(w, r, tokenAutenticacion, strconv.Itoa(*concepto_data.CuentaContable)).Error; err != nil {
+			framework.RespondError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		if err := monoliticComunication.Checkexistecuenta(w, r, tokenAutenticacion, strconv.Itoa(*concepto_data.Cuentacontablepasivoid)).Error; err != nil {
 			framework.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
@@ -181,6 +190,11 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 		conpcetoid := concepto_data.ID
 
 		if err := monoliticComunication.Checkexistecuenta(w, r, tokenAutenticacion, strconv.Itoa(*concepto_data.CuentaContable)).Error; err != nil {
+			framework.RespondError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		if err := monoliticComunication.Checkexistecuenta(w, r, tokenAutenticacion, strconv.Itoa(*concepto_data.Cuentacontablepasivoid)).Error; err != nil {
 			framework.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
