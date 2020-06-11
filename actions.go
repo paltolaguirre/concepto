@@ -233,7 +233,8 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 
 func checkAndNormalizeDatosFormula(concepto_data *structConcepto.Concepto) error {
 	if concepto_data.Tipocalculoautomaticoid == nil {
-		*concepto_data.Tipocalculoautomaticoid = calculoAutomaticoNoAplica
+		calculoAutomatico := calculoAutomaticoNoAplica
+		concepto_data.Tipocalculoautomaticoid = &calculoAutomatico
 	}
 
 	if *concepto_data.Tipocalculoautomaticoid != calculoAutomaticoPorcentajes {
