@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -20,6 +21,12 @@ import (
 type IdsAEliminar struct {
 	Ids []int `json:"ids"`
 }
+
+const (
+	calculoAutomaticoFormula     = -3
+	calculoAutomaticoNoAplica    = -1
+	calculoAutomaticoPorcentajes = -2
+)
 
 /*
 func (strhelper) TableName() string {
@@ -86,6 +93,10 @@ func ConceptoShow(w http.ResponseWriter, r *http.Request) {
 			concepto.Cuentacontable = cuenta
 		}
 
+		if concepto.Cuentacontablepasivoid != nil {
+			concepto.Cuentacontablepasivo = monoliticComunication.Obtenercuenta(w, r, tokenAutenticacion, strconv.Itoa(*concepto.Cuentacontablepasivoid))
+		}
+
 		framework.RespondJSON(w, http.StatusOK, concepto)
 	}
 
@@ -116,31 +127,18 @@ func ConceptoAdd(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if concepto_data.Tipocalculoautomatico.Codigo != "PORCENTAJE" {
-			concepto_data.Porcentaje = nil
-			concepto_data.Tipodecalculo = nil
-			concepto_data.Tipodecalculoid = nil
-		}
-
-		if concepto_data.Tipocalculoautomatico.Codigo != "FORMULA" {
-			concepto_data.Formula = nil
-			concepto_data.Formulanombre = nil
-		}
-
-		concepto_data.Eseditable = true
-		if concepto_data.Tipocalculoautomatico.Codigo != "NO_APLICA" {
-			concepto_data.Eseditable = false
-		}
-
-		if concepto_data.Tipocalculoautomatico.Codigo == "PORCENTAJE" && (concepto_data.Porcentaje == nil || concepto_data.Tipodecalculoid == nil) {
-			framework.RespondError(w, http.StatusInternalServerError, "Debe completar el Porcentaje o el Cálculo entre Conceptos")
+		if err := monoliticComunication.Checkexistecuenta(w, r, tokenAutenticacion, strconv.Itoa(*concepto_data.Cuentacontablepasivoid)).Error; err != nil {
+			framework.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		if concepto_data.Tipocalculoautomatico.Codigo == "FORMULA" && concepto_data.Formulanombre == nil {
-			framework.RespondError(w, http.StatusInternalServerError, "Debe seleccionar una formula")
+		err := checkAndNormalizeDatosFormula(&concepto_data)
+
+		if err != nil {
+			framework.RespondError(w, http.StatusBadRequest, err.Error())
 			return
 		}
+
 		if concepto_data.Codigointerno != nil {
 			framework.RespondError(w, http.StatusInternalServerError, "El codigo interno no debe ser completado")
 			return
@@ -185,6 +183,11 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if err := monoliticComunication.Checkexistecuenta(w, r, tokenAutenticacion, strconv.Itoa(*concepto_data.Cuentacontablepasivoid)).Error; err != nil {
+			framework.RespondError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
 		if p_conpcetoid == conpcetoid || conpcetoid == 0 {
 
 			concepto_data.ID = p_conpcetoid
@@ -193,31 +196,14 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 			db := conexionBD.ObtenerDB(tenant)
 			defer conexionBD.CerrarDB(db)
 
-			if concepto_data.Tipocalculoautomatico.Codigo != "PORCENTAJE" {
-				concepto_data.Porcentaje = nil
-				concepto_data.Tipodecalculo = nil
-				concepto_data.Tipodecalculoid = nil
-			}
 
-			if concepto_data.Tipocalculoautomatico.Codigo != "FORMULA" {
-				concepto_data.Formula = nil
-				concepto_data.Formulanombre = nil
-			}
+			err := checkAndNormalizeDatosFormula(&concepto_data)
 
-			concepto_data.Eseditable = true
-			if concepto_data.Tipocalculoautomatico.Codigo != "NO_APLICA" {
-				concepto_data.Eseditable = false
-			}
-
-			if concepto_data.Tipocalculoautomatico.Codigo == "PORCENTAJE" && (concepto_data.Porcentaje == nil || concepto_data.Tipodecalculoid == nil) {
-				framework.RespondError(w, http.StatusInternalServerError, "Debe completar el Porcentaje o el Cálculo entre Conceptos")
+			if err != nil {
+				framework.RespondError(w, http.StatusBadRequest, err.Error())
 				return
 			}
 
-			if concepto_data.Tipocalculoautomatico.Codigo == "FORMULA" && (concepto_data.Formula == nil || concepto_data.Formulanombre == nil) {
-				framework.RespondError(w, http.StatusInternalServerError, "Debe seleccionar una formula")
-				return
-			}
 			//Reseteo el codigo interno por si fue modificado en el update del concepto
 			var concepto structConcepto.Concepto
 			db.First(&concepto, "id = ?", concepto_data.ID)
@@ -243,6 +229,39 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+}
+
+func checkAndNormalizeDatosFormula(concepto_data *structConcepto.Concepto) error {
+	if concepto_data.Tipocalculoautomaticoid == nil {
+		calculoAutomatico := calculoAutomaticoNoAplica
+		concepto_data.Tipocalculoautomaticoid = &calculoAutomatico
+	}
+
+	if *concepto_data.Tipocalculoautomaticoid != calculoAutomaticoPorcentajes {
+		concepto_data.Porcentaje = nil
+		concepto_data.Tipodecalculo = nil
+		concepto_data.Tipodecalculoid = nil
+	}
+
+	if *concepto_data.Tipocalculoautomaticoid != calculoAutomaticoFormula {
+		concepto_data.Formula = nil
+		concepto_data.Formulanombre = nil
+	}
+
+	concepto_data.Eseditable = true
+	if *concepto_data.Tipocalculoautomaticoid != calculoAutomaticoNoAplica {
+		concepto_data.Eseditable = false
+	}
+
+	if *concepto_data.Tipocalculoautomaticoid == calculoAutomaticoPorcentajes && (concepto_data.Porcentaje == nil || concepto_data.Tipodecalculoid == nil) {
+		return errors.New("Debe completar el Porcentaje o el Cálculo entre Conceptos")
+	}
+
+	if *concepto_data.Tipocalculoautomaticoid == calculoAutomaticoFormula  && concepto_data.Formulanombre == nil {
+		return errors.New("Debe seleccionar una formula")
+	}
+
+	return nil
 }
 
 func ConceptoRemove(w http.ResponseWriter, r *http.Request) {
