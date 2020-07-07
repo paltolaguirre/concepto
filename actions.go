@@ -26,6 +26,8 @@ const (
 	calculoAutomaticoFormula     = -3
 	calculoAutomaticoNoAplica    = -1
 	calculoAutomaticoPorcentajes = -2
+	tipoConceptoRetencion        = -4
+	tipoConceptoNoRemunerativo   = -2
 )
 
 /*
@@ -132,7 +134,7 @@ func ConceptoAdd(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err := checkAndNormalizeDatosFormula(&concepto_data)
+		err := checkAndNormalizeDatosInsertUpdate(&concepto_data)
 
 		if err != nil {
 			framework.RespondError(w, http.StatusBadRequest, err.Error())
@@ -196,8 +198,7 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 			db := conexionBD.ObtenerDB(tenant)
 			defer conexionBD.CerrarDB(db)
 
-
-			err := checkAndNormalizeDatosFormula(&concepto_data)
+			err := checkAndNormalizeDatosInsertUpdate(&concepto_data)
 
 			if err != nil {
 				framework.RespondError(w, http.StatusBadRequest, err.Error())
@@ -231,7 +232,24 @@ func ConceptoUpdate(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func checkAndNormalizeDatosFormula(concepto_data *structConcepto.Concepto) error {
+func checkAndNormalizeDatosInsertUpdate(concepto_data *structConcepto.Concepto) error {
+
+	if concepto_data.Esganancias {
+		*concepto_data.Tipocalculoautomaticoid = calculoAutomaticoFormula
+		concepto_data.Tipoimpuestogananciasid = nil
+		concepto_data.Basesac = false
+		concepto_data.Prorrateo = false
+		if *concepto_data.Tipoconceptoid == tipoConceptoRetencion {
+			*concepto_data.Formulanombre = "ImpuestoALasGanancias"
+		} else if *concepto_data.Tipoconceptoid == tipoConceptoNoRemunerativo {
+			*concepto_data.Formulanombre = "ImpuestoALasGananciasDevolucion"
+		} else {
+			return errors.New("No se puede seleccionar un concepto de ganancias que no sea retencion o no remunerativo")
+		}
+	}
+
+	concepto_data.Tipocalculoautomatico = nil
+
 	if concepto_data.Tipocalculoautomaticoid == nil {
 		calculoAutomatico := calculoAutomaticoNoAplica
 		concepto_data.Tipocalculoautomaticoid = &calculoAutomatico
@@ -257,7 +275,7 @@ func checkAndNormalizeDatosFormula(concepto_data *structConcepto.Concepto) error
 		return errors.New("Debe completar el Porcentaje o el Cálculo entre Conceptos")
 	}
 
-	if *concepto_data.Tipocalculoautomaticoid == calculoAutomaticoFormula  && concepto_data.Formulanombre == nil {
+	if *concepto_data.Tipocalculoautomaticoid == calculoAutomaticoFormula && concepto_data.Formulanombre == nil {
 		return errors.New("Debe seleccionar una formula")
 	}
 
