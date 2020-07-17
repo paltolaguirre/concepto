@@ -21,7 +21,7 @@ phases:
       - $(aws ecr get-login --no-include-email --region $AWS_REGION)
       # Getting configuracion.json
       - echo Getting configuracion.json
-      - wget https://raw.githubusercontent.com/xubiosueldos/configuracion/master/configuracion$ENVIRONMENT/configuracion.json
+      - wget --header "Authorization:token $PERSONAL_TOKEN" https://raw.githubusercontent.com/xubio-inc/configuracion/$BRANCH/configuracion$ENVIRONMENT/configuracion.json
   build:
     commands:
       - echo Pre build completed on `date`
